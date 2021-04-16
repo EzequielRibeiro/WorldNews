@@ -3,91 +3,28 @@
   <component name="CsvFileAttributes">
     <option name="attributeMap">
       <map>
-        <entry key="\app\build\generated\data_binding_base_class_source_out\debug\out\br\projeto\worldnews\databinding\ActivityArticleBinding.java">
-          <value>
-            <Attribute>
-              <option name="separator" value=";" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\app\src\main\java\br\projeto\worldnews\adapter\DBAdapter.java">
-          <value>
-            <Attribute>
-              <option name="separator" value=";" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\app\src\main\java\br\projeto\worldnews\adapter\DataAdapter.java">
-          <value>
-            <Attribute>
-              <option name="separator" value=";" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\app\src\main\java\br\projeto\worldnews\model\Article.java">
-          <value>
-            <Attribute>
-              <option name="separator" value=";" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\app\src\main\java\br\projeto\worldnews\model\ArticleStructure.java">
-          <value>
-            <Attribute>
-              <option name="separator" value=";" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\app\src\main\java\br\projeto\worldnews\model\Topic.java">
-          <value>
-            <Attribute>
-              <option name="separator" value=";" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\app\src\main\java\br\projeto\worldnews\network\GoogleXmlNews.java">
-          <value>
-            <Attribute>
-              <option name="separator" value=";" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\app\src\main\java\br\projeto\worldnews\view\MainActivity.java">
-          <value>
-            <Attribute>
-              <option name="separator" value=";" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\app\src\main\res\layout\activity_article.xml">
+        <entry key="\app\build.gradle">
           <value>
             <Attribute>
               <option name="separator" value=":" />
             </Attribute>
           </value>
         </entry>
-        <entry key="\app\src\main\res\layout\activity_search.xml">
+        <entry key="\app\src\main\java\br\projeto\worldnews\IONRequest.java">
           <value>
             <Attribute>
-              <option name="separator" value=":" />
+              <option name="separator" value=";" />
             </Attribute>
           </value>
         </entry>
-        <entry key="\app\src\main\res\layout\activity_web_view.xml">
+        <entry key="\app\src\main\java\br\projeto\worldnews\SingletonsClass.java">
           <value>
             <Attribute>
-              <option name="separator" value=":" />
+              <option name="separator" value=";" />
             </Attribute>
           </value>
         </entry>
-        <entry key="\app\src\main\res\layout\content_about.xml">
-          <value>
-            <Attribute>
-              <option name="separator" value=":" />
-            </Attribute>
-          </value>
-        </entry>
-        <entry key="\app\src\main\res\layout\content_browser_full.xml">
+        <entry key="\build.gradle">
           <value>
             <Attribute>
               <option name="separator" value=":" />
