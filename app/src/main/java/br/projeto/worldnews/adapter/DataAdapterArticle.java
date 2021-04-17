@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Typeface;
+import android.os.AsyncTask;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,6 +36,7 @@ public class DataAdapterArticle extends RecyclerView.Adapter<DataAdapterArticle.
     private ArrayList<Article> articles;
     private Context mContext;
     private int lastPosition = -1;
+    private int position = 0;
 
     public DataAdapterArticle(Context mContext, ArrayList<Article> articles) {
         this.mContext = mContext;
@@ -52,20 +54,21 @@ public class DataAdapterArticle extends RecyclerView.Adapter<DataAdapterArticle.
 
     @Override
     public void onBindViewHolder(DataAdapterArticle.ViewHolder holder, int position) {
-
+        this.position = position;
         String title = articles.get(position).getTitle();
         if (title.endsWith("- Times of India")) {
             title = title.replace("- Times of India", "");
-        } else if(title.endsWith(" - Firstpost")) {
+        } else if (title.endsWith(" - Firstpost")) {
             title = title.replace(" - Firstpost", "");
         }
 
         holder.tv_card_main_title.setText(title);
+        holder.img_card_main.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_placeholder));
+        String url = articles.get(position).getUrl();
+        new LoadImagemTask(holder.img_card_main, position).execute(url);
+       /*try {
 
-        String urlImage = articles.get(position).getUrl();
-
-        try {
-            articles.get(position).setUrlToImage(ImageExtractor.extractImageUrl(urlImage));
+            articles.get(position).setUrlToImage(ImageExtractor.extractImageUrl(url));
             Glide.with(mContext)
                     .load(articles.get(position).getUrlToImage())
                     .thumbnail(0.1f)
@@ -74,7 +77,7 @@ public class DataAdapterArticle extends RecyclerView.Adapter<DataAdapterArticle.
                     .into(holder.img_card_main);
         } catch (IOException ioException) {
             ioException.printStackTrace();
-        }
+        }*/
 
         if (position > lastPosition) {
             Animation animation = AnimationUtils.loadAnimation(mContext, R.anim.item_animation_fall_down);
@@ -136,5 +139,39 @@ public class DataAdapterArticle extends RecyclerView.Adapter<DataAdapterArticle.
             ((Activity) mContext).overridePendingTransition(R.anim.pull_in_right, R.anim.push_out_left);
         }
     }
+
+    private class LoadImagemTask extends AsyncTask<String, Void, String[]> {
+
+        private ImageView imageView;
+        private int position;
+
+        public LoadImagemTask(ImageView imageView, int position) {
+            this.imageView = imageView;
+            this.position = position;
+        }
+
+        protected String[] doInBackground(String... urlImage) {
+
+            try {
+                urlImage[0] = ImageExtractor.extractImageUrl(urlImage[0]);
+                articles.get(position).setUrlToImage(urlImage[0]);
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
+            return urlImage;
+        }
+
+        protected void onPostExecute(String... urlImage) {
+            super.onPostExecute(urlImage);
+            Glide.with(mContext)
+                    .load(urlImage[0])
+                    .thumbnail(0.1f)
+                    .centerCrop()
+                    .error(R.drawable.ic_placeholder)
+                    .into(imageView);
+
+        }
+    }
+
 }
 

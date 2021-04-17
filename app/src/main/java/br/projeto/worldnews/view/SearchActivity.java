@@ -3,6 +3,7 @@ package br.projeto.worldnews.view;
 import android.content.res.AssetManager;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -12,33 +13,18 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import java.io.File;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
-import br.projeto.worldnews.MyTimesApplication;
 import br.projeto.worldnews.R;
 import br.projeto.worldnews.adapter.DataAdapter;
 import br.projeto.worldnews.model.ArticleStructure;
-import br.projeto.worldnews.model.Constants;
-import br.projeto.worldnews.model.NewsResponse;
-import br.projeto.worldnews.network.ApiClient;
-import br.projeto.worldnews.network.ApiInterface;
-import br.projeto.worldnews.network.interceptors.OfflineResponseCacheInterceptor;
-import br.projeto.worldnews.network.interceptors.ResponseCacheInterceptor;
-import okhttp3.Cache;
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+import br.projeto.worldnews.network.GoogleXmlNews;
 
 public class SearchActivity extends AppCompatActivity {
 
@@ -108,7 +94,7 @@ public class SearchActivity extends AppCompatActivity {
     private void searchEverything(final String search) {
         mSwipeRefreshSearch.setEnabled(true);
         mSwipeRefreshSearch.setRefreshing(true);
-
+        /*
         HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
         logging.setLevel(HttpLoggingInterceptor.Level.BODY);
 
@@ -161,7 +147,15 @@ public class SearchActivity extends AppCompatActivity {
                 mSwipeRefreshSearch.setRefreshing(false);
                 mSwipeRefreshSearch.setEnabled(false);
             }
-        });
+        });*/
+
+        String url = MainActivity.url.replace("topic", search);
+
+        Log.e("URL", url);
+        new GoogleXmlNews(url, SearchActivity.this, mRecyclerViewSearch, mSwipeRefreshSearch).execute();
+        //https://news.google.com/news?cf=all&hl=lang&pz=1&ned=coun&q=bbc-news&output=rss
+
+
     }
 
     @Override

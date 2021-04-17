@@ -17,14 +17,21 @@ public class DBAdapter {
 
     static final String KEY_ID = "id";
     static final String KEY_TOPIC = "topic";
+    static final String KEY_ARGS = "args";
     static final String KEY_TRANSLATED = "translated";
     static final String DATABASE_NAME = "newstopics";
     static final String DATABASE_TABLENAME_TOPIC = "topics";
+    static final String DATABASE_TABLENAME_MY_TOPIC = "mytopics";
     static final int DATABASE_VERSION = 1;
-    static final String DATABASE_CREATE_TOPICS = "CREATE TABLE IF NOT EXISTS "+ DATABASE_TABLENAME_TOPIC +"(" +
+    static final String DATABASE_CREATE_TOPICS = "CREATE TABLE IF NOT EXISTS " + DATABASE_TABLENAME_TOPIC + "(" +
             KEY_ID + " integer primary key autoincrement," +
             KEY_TOPIC + " text not null unique ON CONFLICT ABORT," +
-            KEY_TRANSLATED +  " text);";
+            KEY_TRANSLATED + " text);";
+    static final String DATABASE_CREATE_MY_TOPICS = "CREATE TABLE IF NOT EXISTS " + DATABASE_TABLENAME_MY_TOPIC + "(" +
+            KEY_ID + " integer primary key autoincrement," +
+            KEY_TOPIC + " text not null unique ON CONFLICT ABORT," +
+            KEY_ARGS + " text);";
+
 
     final Context context;
     DataBaseHelper dataBaseHelper;
@@ -49,10 +56,23 @@ public class DBAdapter {
         return db.insert(DATABASE_TABLENAME_TOPIC, null, initialValues);
     }
 
+    public long insertMyTopics(String topics, String args) throws SQLException {
+        ContentValues initialValues = new ContentValues();
+        initialValues.put(KEY_TOPIC, topics);
+        initialValues.put(KEY_ARGS, args);
+        return db.insert(DATABASE_TABLENAME_MY_TOPIC, null, initialValues);
+    }
+
     //delete
-    public boolean deleteUrl(long id) throws SQLException {
+    public boolean deleteTopic(long id) throws SQLException {
 
         return db.delete(DATABASE_TABLENAME_TOPIC, "id=" + id, null) > 0;
+
+    }
+
+    public boolean deleteMyTopic(long id) throws SQLException {
+
+        return db.delete(DATABASE_TABLENAME_MY_TOPIC, "id=" + id, null) > 0;
 
     }
 
@@ -63,12 +83,38 @@ public class DBAdapter {
 
     }
 
+    public boolean deleteAllMyTopics() throws SQLException {
+
+        return db.delete(DATABASE_TABLENAME_MY_TOPIC, null, null) > 0;
+
+    }
+
+    public List<Topic> getAllMyTopics() throws SQLException {
+
+        List<Topic> topicList = new LinkedList<Topic>();
+
+        Cursor cursor = db.query(DATABASE_TABLENAME_MY_TOPIC,
+                new String[]{"id", KEY_TOPIC, KEY_ARGS}, null, null, null, null, "id ASC");
+
+        Topic topic;
+        if (cursor.moveToFirst()) {
+            do {
+                topic = new Topic();
+                topic.setId(cursor.getInt(0));
+                topic.setTopic(cursor.getString(1));
+                topic.setArgs(cursor.getString(2));
+                topicList.add(topic);
+            } while (cursor.moveToNext());
+        }
+        return topicList;
+    }
+
     //retriever all values from database
     public List<Topic> getAllTopics() throws SQLException {
 
         List<Topic> topicList = new LinkedList<Topic>();
 
-        Cursor cursor =  db.query(DATABASE_TABLENAME_TOPIC,
+        Cursor cursor = db.query(DATABASE_TABLENAME_TOPIC,
                 new String[]{"id", KEY_TOPIC, KEY_TRANSLATED}, null, null, null, null, "id ASC");
 
         Topic topic;
@@ -120,6 +166,7 @@ public class DBAdapter {
 
             try {
                 sqLiteDatabase.execSQL(DATABASE_CREATE_TOPICS);
+                sqLiteDatabase.execSQL(DATABASE_CREATE_MY_TOPICS);
             } catch (SQLException e) {
                 e.printStackTrace();
             }

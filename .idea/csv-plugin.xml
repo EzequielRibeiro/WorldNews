@@ -24,6 +24,48 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\app\src\main\java\br\projeto\worldnews\adapter\DBAdapter.java">
+          <value>
+            <Attribute>
+              <option name="separator" value=";" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\app\src\main\java\br\projeto\worldnews\adapter\DataAdapterArticle.java">
+          <value>
+            <Attribute>
+              <option name="separator" value=";" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\app\src\main\java\br\projeto\worldnews\model\Topic.java">
+          <value>
+            <Attribute>
+              <option name="separator" value=";" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\app\src\main\java\br\projeto\worldnews\network\GoogleXmlNews.java">
+          <value>
+            <Attribute>
+              <option name="separator" value=";" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\app\src\main\java\br\projeto\worldnews\view\MainActivity.java">
+          <value>
+            <Attribute>
+              <option name="separator" value=";" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\app\src\main\java\br\projeto\worldnews\view\SearchActivity.java">
+          <value>
+            <Attribute>
+              <option name="separator" value=";" />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\build.gradle">
           <value>
             <Attribute>

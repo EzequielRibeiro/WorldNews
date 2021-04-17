@@ -1,10 +1,13 @@
 package br.projeto.worldnews.network;
 
-import android.content.Context;
+import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
+import android.view.View;
+import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -38,15 +41,107 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
     private final String ns = null;
     private okhttp3.Response response;
     private ArrayList<Article> list;
-    private Context context;
+    private Activity context;
     private String url;
     private RecyclerView recyclerView;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private Exception exception;
 
-    public GoogleXmlNews(String url,Context context,RecyclerView recyclerView) {
+
+    public GoogleXmlNews(String url, Activity context, RecyclerView recyclerView, SwipeRefreshLayout swipeRefreshLayout) {
         list = new ArrayList<>();
         this.context = context;
-        this.url     = url;
+        this.url = url;
         this.recyclerView = recyclerView;
+        this.swipeRefreshLayout = swipeRefreshLayout;
+
+    }
+
+    private void readXML() {
+
+        try {
+
+            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
+            factory.setNamespaceAware(true);
+            XmlPullParser xpp = factory.newPullParser();
+
+            // InputStream inputStream = getInputStream(stringUrl);
+            // We will get the XML from an input stream
+            xpp.setInput(response.body().byteStream(), "UTF_8");
+            xpp.nextTag();
+
+            boolean insideItem = false;
+
+            Article news = null;
+            while (xpp.next() != XmlPullParser.END_DOCUMENT) {
+
+                if (xpp.getEventType() == XmlPullParser.START_TAG) {
+
+                    if (xpp.getName().equalsIgnoreCase("item")) {
+                        insideItem = true;
+                        news = new Article();
+
+                    } else if (xpp.getName().equalsIgnoreCase("title")) {
+                        if (insideItem)
+                            news.setTitle(readTitle(xpp)); //extract the headline
+                    } else if (xpp.getName().equalsIgnoreCase("link")) {
+                        if (insideItem) {
+                            news.setUrl(readLink(xpp)); //extract the link of article
+                            //  news.setUrlToImage(extractImageUrl(news.getUrl()));
+                            //  news.setUrlToImage(ImageExtractor.extractImageUrl(news.getUrl()));
+                        }
+                    } else if (xpp.getName().equalsIgnoreCase("description")) {
+                        if (insideItem)
+                            news.setDescription(readDescription(xpp)); //extract the link of article
+                    } else if (xpp.getName().equalsIgnoreCase("pubDate")) {
+                        if (insideItem)
+                            news.setPublishedAt(readPubDate(xpp)); //extract the link of article
+                    } else if (xpp.getName().equalsIgnoreCase("source")) {
+                        if (insideItem)
+                            news.setSource(readSource(xpp)); //extract the link of article
+                    }
+
+                } else if (xpp.getEventType() == XmlPullParser.END_TAG && xpp.getName().equalsIgnoreCase("item")) {
+
+                    list.add(news);
+                    insideItem = false;
+
+
+                }
+            }
+            context.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (list.size() < 1)
+                        Toast.makeText(context, "no results found", Toast.LENGTH_LONG).show();
+                }
+            });
+
+
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+            exception = e;
+        } catch (XmlPullParserException e) {
+            e.printStackTrace();
+            exception = e;
+        } catch (IOException e) {
+            e.printStackTrace();
+            exception = e;
+        } catch (IllegalArgumentException e) {
+            e.printStackTrace();
+            exception = e;
+        }
+        if (exception != null) {
+
+            context.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(context, "an error has occurred", Toast.LENGTH_LONG).show();
+                }
+            });
+
+        }
+
     }
 
     @Override
@@ -70,87 +165,44 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
         OkHttpClient httpClient1 = httpClient.build();
         try {
             response = httpClient1.newCall(request1).execute();
-            Log.e("Passo","passo1");
-        }catch (IOException ioException){
-            ioException.printStackTrace();
 
-        }
-        try {
+            if (response.isSuccessful()) {
+                readXML();
 
-            XmlPullParserFactory factory = XmlPullParserFactory.newInstance();
-            factory.setNamespaceAware(true);
-            XmlPullParser xpp = factory.newPullParser();
-
-            // InputStream inputStream = getInputStream(stringUrl);
-            // We will get the XML from an input stream
-            xpp.setInput(response.body().byteStream(), "UTF_8");
-            xpp.nextTag();
-            Log.e("Passo","passo2");
-            /*
-            BufferedReader r = new BufferedReader(new InputStreamReader(inputStream));
-            StringBuilder total = new StringBuilder();
-
-            for (String line; (line = r.readLine()) != null; ) {
-                total.append(line).append('\n');
-                Log.e("value",total.toString());
-            }
-
-            /* We will parse the XML content looking for the "<title>" tag which appears inside the "<item>" tag.
-             * However, we should take in consideration that the rss feed name also is enclosed in a "<title>" tag.
-             * As we know, every feed begins with these lines: "<channel><title>Feed_Name</title>...."
-             * so we should skip the "<title>" tag which is a child of "<channel>" tag,
-             * and take in consideration only "<title>" tag which is a child of "<item>"
-             *
-             * In order to achieve this, we will make use of a boolean variable.
-             */
-            boolean insideItem = false;
-
-            Article news = null;
-            while (xpp.next() != XmlPullParser.END_DOCUMENT) {
-
-                if (xpp.getEventType() == XmlPullParser.START_TAG) {
-
-                    if (xpp.getName().equalsIgnoreCase("item")) {
-                        insideItem = true;
-                        news = new Article();
-
-                    } else if (xpp.getName().equalsIgnoreCase("title")) {
-                        if (insideItem)
-                            news.setTitle(readTitle(xpp)); //extract the headline
-                    } else if (xpp.getName().equalsIgnoreCase("link")) {
-                        if (insideItem) {
-                            news.setUrl(readLink(xpp)); //extract the link of article
-                          //  news.setUrlToImage(extractImageUrl(news.getUrl()));
-                          //  news.setUrlToImage(ImageExtractor.extractImageUrl(news.getUrl()));
-                        }
-                    } else if (xpp.getName().equalsIgnoreCase("description")) {
-                        if (insideItem)
-                            news.setDescription(readDescription(xpp)); //extract the link of article
-                    } else if (xpp.getName().equalsIgnoreCase("pubDate")) {
-                        if (insideItem)
-                            news.setPublishedAt(readPubDate(xpp)); //extract the link of article
-                    } else if (xpp.getName().equalsIgnoreCase("source")) {
-                        if (insideItem)
-                            news.setSource(readSource(xpp)); //extract the link of article
+                context.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        recyclerView.setVisibility(View.VISIBLE);
+                        swipeRefreshLayout.setRefreshing(false);
+                        swipeRefreshLayout.setEnabled(false);
                     }
+                });
 
-                } else if (xpp.getEventType() == XmlPullParser.END_TAG && xpp.getName().equalsIgnoreCase("item")) {
+            } else {
 
-                    list.add(news);
-                    insideItem = false;
-
-                }
+                context.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        swipeRefreshLayout.setRefreshing(false);
+                        swipeRefreshLayout.setEnabled(false);
+                        swipeRefreshLayout.setVisibility(View.GONE);
+                        Toast.makeText(context, "no results found", Toast.LENGTH_LONG).show();
+                    }
+                });
             }
-            Log.e("Passo","fim");
-        } catch (MalformedURLException e) {
-            e.printStackTrace();
-        } catch (XmlPullParserException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-            e.printStackTrace();
+
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+            exception = ioException;
+            context.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(context, "an error has occurred", Toast.LENGTH_LONG).show();
+                }
+            });
         }
+
+
         return null;
     }
 
@@ -275,13 +327,7 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
 
         DataAdapterArticle adapter = new DataAdapterArticle(context, list);
         recyclerView.setAdapter(adapter);
-
-        for(int i = 0; i< list.size();i++){
-            Log.e("textoTitle",list.get(i).getTitle());
-           // Log.e("textoImagem",list.get(i).getUrlToImage());
-        }
-
-        Log.e("Size","Size "+list.size());
+        swipeRefreshLayout.setRefreshing(false);
 
     }
 

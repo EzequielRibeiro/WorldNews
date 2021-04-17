@@ -17,6 +17,11 @@ import androidx.appcompat.widget.Toolbar;
 import com.bumptech.glide.Glide;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import java.io.IOException;
+
 import br.projeto.worldnews.R;
 import br.projeto.worldnews.model.Constants;
 
@@ -35,6 +40,7 @@ public class ArticleActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_article);
+
 
         createToolbar();
         floatingButton();
@@ -82,6 +88,10 @@ public class ArticleActivity extends AppCompatActivity {
         content_Description.setText(description);
         content_Description.setTypeface(montserrat_regular);
 
+        TextView content_Date = findViewById(R.id.content_Date);
+        content_Date.setText(date);
+        content_Date.setTypeface(montserrat_regular);
+
         ImageView collapsingImage = findViewById(R.id.collapsingImage);
         Glide.with(this)
                 .load(imgURL)
@@ -89,6 +99,23 @@ public class ArticleActivity extends AppCompatActivity {
                 .error(R.drawable.ic_placeholder)
                 .crossFade()
                 .into(collapsingImage);
+
+
+        Document document = null;
+        try {
+            document = Jsoup.connect(URL).get();
+            String des = document.select("meta[name=description]").first().attr("content");
+            content_Description.setText(des);
+
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+            content_Description.setText(description);
+
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            content_Description.setText(description);
+        }
+
     }
 
     private void createToolbar() {
