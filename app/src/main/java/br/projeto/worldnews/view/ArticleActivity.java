@@ -161,8 +161,6 @@ public class ArticleActivity extends AppCompatActivity {
         protected String[] doInBackground(String... url) {
 
             ImageView collapsingImage = findViewById(R.id.collapsingImage);
-
-            if (getWindow().getDecorView().getRootView().isShown())
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
