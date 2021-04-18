@@ -45,6 +45,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\app\src\main\java\br\projeto\worldnews\model\Article.java">
+          <value>
+            <Attribute>
+              <option name="separator" value=";" />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\app\src\main\java\br\projeto\worldnews\model\Topic.java">
           <value>
             <Attribute>

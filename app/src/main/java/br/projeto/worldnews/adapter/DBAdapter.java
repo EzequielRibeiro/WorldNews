@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import java.util.LinkedList;
 import java.util.List;
 
+import br.projeto.worldnews.model.Article;
 import br.projeto.worldnews.model.Topic;
 
 
@@ -18,9 +19,11 @@ public class DBAdapter {
     static final String KEY_ID = "id";
     static final String KEY_TOPIC = "topic";
     static final String KEY_ARGS = "args";
+    static final String KEY_TITLES = "title";
     static final String KEY_TRANSLATE = "translate";
     static final String KEY_TRANSLATED = "translated";
     static final String DATABASE_NAME = "newstopics";
+    static final String DATABASE_TABLENAME_TITLES = "titles";
     static final String DATABASE_TABLENAME_TOPIC = "topics";
     static final String DATABASE_TABLENAME_MY_TOPIC = "mytopics";
     static final int DATABASE_VERSION = 1;
@@ -33,7 +36,9 @@ public class DBAdapter {
             KEY_ID + " integer primary key autoincrement," +
             KEY_TOPIC + " text not null unique ON CONFLICT ABORT," +
             KEY_ARGS + " text);";
-
+    static final String DATABASE_CREATE_TITLES = "CREATE TABLE IF NOT EXISTS " + DATABASE_TABLENAME_TITLES + "(" +
+            KEY_ID + " integer primary key autoincrement," +
+            KEY_TITLES + " text not null unique ON CONFLICT ABORT);";
 
     final Context context;
     DataBaseHelper dataBaseHelper;
@@ -65,6 +70,65 @@ public class DBAdapter {
         return db.insert(DATABASE_TABLENAME_MY_TOPIC, null, initialValues);
     }
 
+    public boolean deleteAllTitles() throws SQLException {
+
+        return db.delete(DATABASE_TABLENAME_TITLES, null, null) > 0;
+
+    }
+
+    public long insertTitle(String titles) throws SQLException {
+        ContentValues initialValues = new ContentValues();
+        initialValues.put(KEY_TITLES, titles);
+        return db.insert(DATABASE_TABLENAME_TITLES, null, initialValues);
+    }
+
+    public int existTitleInTable(String titles) {
+
+        Cursor cursor = db.query(DATABASE_TABLENAME_TITLES,
+                new String[]{KEY_TITLES}, KEY_TITLES + "=?", new String[]{titles}, null, null, "id ASC");
+        cursor.moveToFirst();
+
+        if (cursor.getCount() == 1)
+            return 1;
+        else
+            return 0;
+
+    }
+
+    public List<Article> getAllTitles() throws SQLException {
+
+        List<Article> list = new LinkedList<Article>();
+
+        Cursor cursor = db.query(DATABASE_TABLENAME_TITLES,
+                new String[]{"id", KEY_TITLES}, null, null, null, null, "id ASC");
+
+        Article article;
+        if (cursor.moveToFirst()) {
+            do {
+                article = new Article();
+                article.setId(cursor.getInt(0));
+                article.setTitle(cursor.getString(1));
+                list.add(article);
+
+            } while (cursor.moveToNext());
+        }
+        return list;
+    }
+
+    public int getCountTitles() {
+        Cursor cursor;
+        int count = 0;
+
+        cursor = db.rawQuery("select count(" + KEY_TITLES + ") from " + DATABASE_TABLENAME_TITLES, null);
+        if (cursor.moveToFirst())
+            count = cursor.getInt(0);
+        cursor.close();
+
+        return count;
+
+
+    }
+
     //delete
     public boolean deleteTopic(long id) throws SQLException {
 
@@ -77,6 +141,7 @@ public class DBAdapter {
         return db.delete(DATABASE_TABLENAME_MY_TOPIC, "id=" + id, null) > 0;
 
     }
+
 
     //delete
     public boolean deleteAllTopics() throws SQLException {
@@ -183,6 +248,7 @@ public class DBAdapter {
             try {
                 sqLiteDatabase.execSQL(DATABASE_CREATE_TOPICS);
                 sqLiteDatabase.execSQL(DATABASE_CREATE_MY_TOPICS);
+                sqLiteDatabase.execSQL(DATABASE_CREATE_TITLES);
             } catch (SQLException e) {
                 e.printStackTrace();
             }

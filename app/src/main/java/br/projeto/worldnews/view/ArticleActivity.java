@@ -164,12 +164,16 @@ public class ArticleActivity extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        Glide.with(ArticleActivity.this)
-                                .load(url[0])
-                                .centerCrop()
-                                .error(R.drawable.default_news_image)
-                                .crossFade()
-                                .into(collapsingImage);
+                        try {
+                            Glide.with(ArticleActivity.this)
+                                    .load(url[0])
+                                    .centerCrop()
+                                    .error(R.drawable.default_news_image)
+                                    .crossFade()
+                                    .into(collapsingImage);
+                        } catch (IllegalArgumentException i) {
+                            i.printStackTrace();
+                        }
                     }
                 });
 

@@ -10,9 +10,6 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 import org.xmlpull.v1.XmlPullParserFactory;
@@ -28,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 
 import br.projeto.worldnews.MyTimesApplication;
 import br.projeto.worldnews.R;
+import br.projeto.worldnews.adapter.DBAdapter;
 import br.projeto.worldnews.adapter.DataAdapterArticle;
 import br.projeto.worldnews.model.Article;
 import br.projeto.worldnews.network.interceptors.OfflineResponseCacheInterceptor;
@@ -41,7 +39,7 @@ import okhttp3.logging.HttpLoggingInterceptor;
 public class GoogleXmlNews extends AsyncTask<String, Void, String> {
 
     // We don't use namespaces
-    private final String ns = null;
+    private static final String ns = null;
     private okhttp3.Response response;
     private ArrayList<Article> list;
     private Activity context;
@@ -50,15 +48,45 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
     private SwipeRefreshLayout swipeRefreshLayout;
     private Exception exception;
     private DataAdapterArticle adapter;
+    private DBAdapter dbAdapter;
 
 
     public GoogleXmlNews(String url, Activity context, RecyclerView recyclerView, SwipeRefreshLayout swipeRefreshLayout) {
         list = new ArrayList<>();
+        dbAdapter = new DBAdapter(context);
         this.context = context;
         this.url = url;
         this.recyclerView = recyclerView;
         this.swipeRefreshLayout = swipeRefreshLayout;
 
+    }
+
+    public GoogleXmlNews(Activity context) {
+        this.context = context;
+        dbAdapter = new DBAdapter(context);
+    }
+
+    public static String readTitle(XmlPullParser parser) throws XmlPullParserException, IOException {
+        parser.require(XmlPullParser.START_TAG, ns, "title");
+        String title = readText(parser);
+        parser.require(XmlPullParser.END_TAG, ns, "title");
+        return title;
+    }
+
+    private static String readText(XmlPullParser parser) throws IOException, XmlPullParserException {
+        String result = " ";
+        if (parser.next() == XmlPullParser.TEXT) {
+            result = parser.getText();
+            parser.nextTag();
+        }
+        return result;
+    }
+
+    private String readLink(XmlPullParser parser) throws XmlPullParserException, IOException {
+        parser.require(XmlPullParser.START_TAG, ns, "link");
+        String link = readText(parser);
+        parser.require(XmlPullParser.END_TAG, ns, "link");
+        return link;
     }
 
     private void readXML() {
@@ -110,10 +138,18 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
                     list.add(news);
                     insideItem = false;
 
+                    if (dbAdapter != null)
+                        if (dbAdapter.getCountTitles() < 5) {
+                            if (dbAdapter.existTitleInTable(news.getTitle()) == 0) {
+                                dbAdapter.insertTitle(news.getTitle());
+                            }
+                        } else {
+                            dbAdapter.close();
+                            dbAdapter = null;
+                        }
 
                 }
             }
-
 
         } catch (MalformedURLException e) {
             e.printStackTrace();
@@ -128,6 +164,7 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
             e.printStackTrace();
             exception = e;
         }
+
         if (exception != null) {
 
             context.runOnUiThread(new Runnable() {
@@ -140,71 +177,7 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
         }
 
     }
-
-    @Override
-    protected String doInBackground(String... params) {
-
-        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-        httpClient.addNetworkInterceptor(new ResponseCacheInterceptor());
-        httpClient.addInterceptor(new OfflineResponseCacheInterceptor());
-        httpClient.cache(new Cache(new File(MyTimesApplication.getMyTimesApplicationInstance().getCacheDir(), "ResponsesCache"), 10 * 1024 * 1024));
-        httpClient.readTimeout(60, TimeUnit.SECONDS);
-        httpClient.connectTimeout(60, TimeUnit.SECONDS);
-        httpClient.addInterceptor(logging);
-
-        Request request1 = new Request.Builder()
-                .url(url)
-                .build();
-
-        OkHttpClient httpClient1 = httpClient.build();
-        try {
-            response = httpClient1.newCall(request1).execute();
-
-            if (response.isSuccessful()) {
-                readXML();
-            }
-
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-            exception = ioException;
-            context.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    Toast.makeText(context, "an error has occurred", Toast.LENGTH_LONG).show();
-                }
-            });
-        }
-
-
-        return null;
-    }
-
-    private String readTitle(XmlPullParser parser) throws XmlPullParserException, IOException {
-        parser.require(XmlPullParser.START_TAG, ns, "title");
-        String title = readText(parser);
-        parser.require(XmlPullParser.END_TAG, ns, "title");
-        return title;
-    }
-
-    private String readLink(XmlPullParser parser) throws XmlPullParserException, IOException {
-        parser.require(XmlPullParser.START_TAG, ns, "link");
-        String link = readText(parser);
-        parser.require(XmlPullParser.END_TAG, ns, "link");
-        return link;
-    }
-
-    private String readText(XmlPullParser parser) throws IOException, XmlPullParserException {
-        String result = " ";
-        if (parser.next() == XmlPullParser.TEXT) {
-            result = parser.getText();
-            parser.nextTag();
-        }
-        return result;
-    }
-
+ /*
     private String extractImageUrl(String urlImage) {
 
         Document doc = null;
@@ -234,7 +207,7 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
 
     }
 
-   /* private void getImagemArticle(String url, String title){
+   private void getImagemArticle(String url, String title){
         Document document;
         try {
             //Get Document object after parsing the html from given url.
@@ -297,6 +270,46 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
             Log.w("ERROR: ", "Exception while retrieving the input stream", e);
             return null;
         }
+    }
+
+    @Override
+    protected String doInBackground(String... params) {
+
+        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
+
+        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
+        httpClient.addNetworkInterceptor(new ResponseCacheInterceptor());
+        httpClient.addInterceptor(new OfflineResponseCacheInterceptor());
+        httpClient.cache(new Cache(new File(MyTimesApplication.getMyTimesApplicationInstance().getCacheDir(), "ResponsesCache"), 10 * 1024 * 1024));
+        httpClient.readTimeout(60, TimeUnit.SECONDS);
+        httpClient.connectTimeout(60, TimeUnit.SECONDS);
+        httpClient.addInterceptor(logging);
+
+        Request request1 = new Request.Builder()
+                .url(url)
+                .build();
+
+        OkHttpClient httpClient1 = httpClient.build();
+        try {
+            response = httpClient1.newCall(request1).execute();
+
+            if (response.isSuccessful()) {
+                readXML();
+            }
+
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+            exception = ioException;
+
+            context.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    Toast.makeText(context, "an error has occurred", Toast.LENGTH_LONG).show();
+                }
+            });
+        }
+        return null;
     }
 
     protected void onPostExecute(String result) {

@@ -1,7 +1,13 @@
 package br.projeto.worldnews.view;
 
+import android.app.AlarmManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.graphics.Typeface;
 import android.net.Uri;
@@ -10,7 +16,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.os.StrictMode;
-import android.util.Log;
+import android.os.SystemClock;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -31,7 +37,6 @@ import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.Drawer.OnDrawerItemClickListener;
 import com.mikepenz.materialdrawer.DrawerBuilder;
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
-import com.mikepenz.materialdrawer.model.SecondaryDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 
@@ -53,6 +58,7 @@ import br.projeto.worldnews.model.ArticleStructure;
 import br.projeto.worldnews.model.Constants;
 import br.projeto.worldnews.model.Topic;
 import br.projeto.worldnews.network.GoogleXmlNews;
+import br.projeto.worldnews.util.BootReceiver;
 import br.projeto.worldnews.util.UtilityMethods;
 
 
@@ -60,10 +66,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     public static String url = "https://news.google.com/news?cf=all&hl=language&pz=1&ned=country&q=topic&output=rss";
     private final static String LOCALE_DEFAULT = "en";
-    private String[] TOPIC_ARRAY = {"Google News","Country", "Business", "World", "Finance", "Culture", "Gastronomy", "Youtube",
-            "Hacker", "Politics", "Science", "Technology", "Economy", "Entertainment",
+    private String[] TOPIC_ARRAY = {"Google News", "Country", "Business", "World", "Finance", "Culture", "Gastronomy",
+            "Youtube", "Twitch", "Hacker", "Politics", "Science", "Technology", "Economy", "Entertainment",
             "Sports", "Health", "Videogame", "BitCoin", "Films", "Travels", "Europe", "South America",
-            "North America", "Asia", "Africa", "Middle East", "Oceania", "Contact us", "About the app"};
+            "North America", "Asia", "Africa", "Middle East", "Oceania", "Rate us!", "Contact us", "About the app"};
 
     private String SOURCE;
     private GoogleXmlNews googleXmlNews;
@@ -105,7 +111,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         montserrat_regular = Typeface.createFromAsset(assetManager, "fonts/Montserrat-Regular.ttf");
 
 
-        TOPIC_ARRAY[0] = locale.getDisplayCountry();
+        TOPIC_ARRAY[1] = locale.getDisplayCountry();
         DBAdapter dbAdapter = new DBAdapter(MainActivity.this);
         //populates database with topics to menu
         if (dbAdapter.getCountTopics() == 0) {
@@ -127,6 +133,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             linearLayoutLoading.setVisibility(View.GONE);
             createDrawer(savedInstanceState, toolbar, montserrat_regular);
         }
+
+        createNotificationChannel();
+        if (!checkAlarmExist())
+            setAlarm();
 
     }
 
@@ -239,12 +249,16 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
         PrimaryDrawerItem item25 = new PrimaryDrawerItem().withIdentifier(25).withName(topicList.get(25).getTopicTranslate())
                 .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
-        SecondaryDrawerItem item26 = new SecondaryDrawerItem().withIdentifier(26).withName(topicList.get(26).getTopicTranslate())
-                .withIcon(R.drawable.ic_mail).withTypeface(montserrat_regular);
-        SecondaryDrawerItem item27 = new SecondaryDrawerItem().withIdentifier(27).withName(topicList.get(27).getTopicTranslate())
-                .withIcon(R.drawable.ic_info).withTypeface(montserrat_regular);
-        SecondaryDrawerItem item28 = new SecondaryDrawerItem().withIdentifier(28).withName(topicList.get(28).getTopicTranslate())
-                .withIcon(R.drawable.ic_info).withTypeface(montserrat_regular);
+        PrimaryDrawerItem item26 = new PrimaryDrawerItem().withIdentifier(26).withName(topicList.get(26).getTopicTranslate())
+                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+        PrimaryDrawerItem item27 = new PrimaryDrawerItem().withIdentifier(27).withName(topicList.get(27).getTopicTranslate())
+                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+        PrimaryDrawerItem item28 = new PrimaryDrawerItem().withIdentifier(28).withName(topicList.get(28).getTopicTranslate())
+                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+        PrimaryDrawerItem item29 = new PrimaryDrawerItem().withIdentifier(29).withName(topicList.get(29).getTopicTranslate())
+                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+        PrimaryDrawerItem item30 = new PrimaryDrawerItem().withIdentifier(30).withName(topicList.get(30).getTopicTranslate())
+                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
 
 
         accountHeader = new AccountHeaderBuilder()
@@ -260,14 +274,14 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 .withSelectedItem(0)
                 .addDrawerItems(item0, item1, item2, item3, item4, item5, item6, item7, item8, item9,
                         item10, item11, item12, item13, item14, item15, item16, item17, item18, item19, item20,
-                        item21, item22, item23, item24, item25, item26, item27,item28)
+                        item21, item22, item23, item24, item25, item26, item27, item28, item29, item30)
                 .withOnDrawerItemClickListener(new OnDrawerItemClickListener() {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
 
                         int selected = (int) (long) position - 1;
 
-                        if (selected <= 26) {
+                        if (selected <= 27) {
                             SOURCE = topicList.get(selected).getTopicTranslate();
                             mTitle.setText(((Nameable) drawerItem).getName().getText(MainActivity.this));
                             onLoadingSwipeRefreshLayout();
@@ -275,10 +289,14 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
                         switch (selected) {
 
-                            case 27:
+                            case 28:
+                                Toast.makeText(MainActivity.this, "rate us!", Toast.LENGTH_LONG).show();
+                                break;
+
+                            case 29:
                                 sendEmail();
                                 break;
-                            case 28:
+                            case 30:
                                 openAboutActivity();
                                 break;
                             default:
@@ -298,8 +316,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         //"https://news.google.com/news?cf=all&hl=language&pz=1&ned=country&q=topic&output=rss";
         String url = this.url.replace("topic", SOURCE);
 
-        if(SOURCE.equals("Google News")
-        url = "https://news.google.com/rss?hl="+locale.getLanguage()+"&gl="+countryCode;
+        if (SOURCE.equals("Google News"))
+            url = "https://news.google.com/rss?hl=" + locale.getLanguage() + "&gl=" + countryCode;
 
         googleXmlNews = new GoogleXmlNews(url, MainActivity.this, recyclerView, swipeRefreshLayout);
         googleXmlNews.execute();
@@ -423,6 +441,31 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         }
     }
 
+    private void setAlarm() {
+        AlarmManager alarmMgr = (AlarmManager) getSystemService(ALARM_SERVICE);
+        Intent intent = new Intent(MainActivity.this, BootReceiver.class);
+        PendingIntent alarmIntent = PendingIntent.getBroadcast(
+                MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        alarmMgr.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                SystemClock.elapsedRealtime() + AlarmManager.INTERVAL_HALF_HOUR,
+                AlarmManager.INTERVAL_HALF_HOUR, alarmIntent);
+    }
+
+    public boolean checkAlarmExist() {
+
+        ComponentName receiver = new ComponentName(MainActivity.this, BootReceiver.class);
+        PackageManager pm = getPackageManager();
+        pm.setComponentEnabledSetting(receiver,
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+                PackageManager.DONT_KILL_APP);
+
+        Intent intent = new Intent(MainActivity.this, BootReceiver.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        boolean alarmUp = (PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_NO_CREATE) != null);
+        return alarmUp;
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -440,6 +483,19 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         super.onDestroy();
     }
 
+    private void createNotificationChannel() {
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "NewsApp";
+            String description = "NewsApp";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel("NewsApp", name, importance);
+            channel.setDescription(description);
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            notificationManager.createNotificationChannel(channel);
+        }
+    }
+
     private class Loading extends AsyncTask {
 
         DBAdapter dbAdapter = new DBAdapter(getApplicationContext());
@@ -448,10 +504,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         protected Object doInBackground(Object[] objects) {
 
             topicList = dbAdapter.getAllTopics();
-            for (int i = 1; i < topicList.size(); i++) {
+            for (int i = 2; i < topicList.size(); i++) {
                 String topic = topicList.get(i).getTopic();
                 String translate = "";
-                if (!topicList.get(i).isTranslated()) {
+                if (!topicList.get(i).isTranslated() && (!topicList.get(i).getTopic().contains("Youtube")
+                        && !topicList.get(i).getTopic().contains("Twitch"))) {
                     translate = translate(LOCALE_DEFAULT, locale.getLanguage(), topic);
                     if (translate.length() > 0)
                         dbAdapter.updateTopics(topicList.get(i).getId(), translate);

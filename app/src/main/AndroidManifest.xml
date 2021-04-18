@@ -5,6 +5,7 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:name=".MyTimesApplication"
@@ -50,7 +51,8 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="br.projeto.worldnews.view.ArticleActivity" />
         </activity>
-        <activity android:name=".view.SearchActivity"
+        <activity
+            android:name=".view.SearchActivity"
             android:parentActivityName=".view.MainActivity"
             android:theme="@style/AppThemeSearch"
             tools:targetApi="jelly_bean">
@@ -58,6 +60,14 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="br.projeto.worldnews.view.MainActivity" />
         </activity>
+
+        <receiver
+            android:name=".util.BootReceiver"
+            android:enabled="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+            </intent-filter>
+        </receiver>
     </application>
 
 </manifest>
