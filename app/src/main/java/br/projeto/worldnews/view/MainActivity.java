@@ -60,7 +60,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     public static String url = "https://news.google.com/news?cf=all&hl=language&pz=1&ned=country&q=topic&output=rss";
     private final static String LOCALE_DEFAULT = "en";
-    private String[] TOPIC_ARRAY = {"Country", "Business", "World", "Finance", "Culture", "Gastronomy", "Youtube",
+    private String[] TOPIC_ARRAY = {"Google News","Country", "Business", "World", "Finance", "Culture", "Gastronomy", "Youtube",
             "Hacker", "Politics", "Science", "Technology", "Economy", "Entertainment",
             "Sports", "Health", "Videogame", "BitCoin", "Films", "Travels", "Europe", "South America",
             "North America", "Asia", "Africa", "Middle East", "Oceania", "Contact us", "About the app"};
@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         createToolbar();
         createRecyclerView();
         SOURCE = TOPIC_ARRAY[0];
-        mTitle.setText(getString(R.string.toolbar_default_text) + " " + SOURCE);
+        mTitle.setText(getString(R.string.toolbar_default_text) + " " + locale.getDisplayCountry());
 
 
         //translate topics to current language
@@ -243,6 +243,9 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 .withIcon(R.drawable.ic_mail).withTypeface(montserrat_regular);
         SecondaryDrawerItem item27 = new SecondaryDrawerItem().withIdentifier(27).withName(topicList.get(27).getTopicTranslate())
                 .withIcon(R.drawable.ic_info).withTypeface(montserrat_regular);
+        SecondaryDrawerItem item28 = new SecondaryDrawerItem().withIdentifier(28).withName(topicList.get(28).getTopicTranslate())
+                .withIcon(R.drawable.ic_info).withTypeface(montserrat_regular);
+
 
         accountHeader = new AccountHeaderBuilder()
                 .withActivity(this)
@@ -257,14 +260,14 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 .withSelectedItem(0)
                 .addDrawerItems(item0, item1, item2, item3, item4, item5, item6, item7, item8, item9,
                         item10, item11, item12, item13, item14, item15, item16, item17, item18, item19, item20,
-                        item21, item22, item23, item24, item25, item26, item27)
+                        item21, item22, item23, item24, item25, item26, item27,item28)
                 .withOnDrawerItemClickListener(new OnDrawerItemClickListener() {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
 
                         int selected = (int) (long) position - 1;
 
-                        if (selected <= 25) {
+                        if (selected <= 26) {
                             SOURCE = topicList.get(selected).getTopicTranslate();
                             mTitle.setText(((Nameable) drawerItem).getName().getText(MainActivity.this));
                             onLoadingSwipeRefreshLayout();
@@ -272,10 +275,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
                         switch (selected) {
 
-                            case 26:
+                            case 27:
                                 sendEmail();
                                 break;
-                            case 27:
+                            case 28:
                                 openAboutActivity();
                                 break;
                             default:
@@ -295,7 +298,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         //"https://news.google.com/news?cf=all&hl=language&pz=1&ned=country&q=topic&output=rss";
         String url = this.url.replace("topic", SOURCE);
 
-        Log.e("URL", url);
+        if(SOURCE.equals("Google News")
+        url = 
         googleXmlNews = new GoogleXmlNews(url, MainActivity.this, recyclerView, swipeRefreshLayout);
         googleXmlNews.execute();
         //https://news.google.com/news?cf=all&hl=lang&pz=1&ned=coun&q=bbc-news&output=rss
@@ -461,9 +465,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             super.onPostExecute(o);
             onLoadingSwipeRefreshLayout();
             linearLayoutLoading.setVisibility(View.GONE);
-            SOURCE = dbAdapter.getCountryName(SOURCE);
             dbAdapter.close();
-            mTitle.setText(getString(R.string.toolbar_default_text) + " " + SOURCE);
             createDrawer(getIntent().getExtras(), toolbar, montserrat_regular);
 
         }
