@@ -18,6 +18,7 @@ public class DBAdapter {
     static final String KEY_ID = "id";
     static final String KEY_TOPIC = "topic";
     static final String KEY_ARGS = "args";
+    static final String KEY_TRANSLATE = "translate";
     static final String KEY_TRANSLATED = "translated";
     static final String DATABASE_NAME = "newstopics";
     static final String DATABASE_TABLENAME_TOPIC = "topics";
@@ -26,7 +27,8 @@ public class DBAdapter {
     static final String DATABASE_CREATE_TOPICS = "CREATE TABLE IF NOT EXISTS " + DATABASE_TABLENAME_TOPIC + "(" +
             KEY_ID + " integer primary key autoincrement," +
             KEY_TOPIC + " text not null unique ON CONFLICT ABORT," +
-            KEY_TRANSLATED + " text);";
+            KEY_TRANSLATE + " text," +
+            KEY_TRANSLATED + " boolean DEFAULT 0);";
     static final String DATABASE_CREATE_MY_TOPICS = "CREATE TABLE IF NOT EXISTS " + DATABASE_TABLENAME_MY_TOPIC + "(" +
             KEY_ID + " integer primary key autoincrement," +
             KEY_TOPIC + " text not null unique ON CONFLICT ABORT," +
@@ -52,7 +54,7 @@ public class DBAdapter {
     public long insertTopics(String topics, String translate) throws SQLException {
         ContentValues initialValues = new ContentValues();
         initialValues.put(KEY_TOPIC, topics);
-        initialValues.put(KEY_TRANSLATED, translate);
+        initialValues.put(KEY_TRANSLATE, translate);
         return db.insert(DATABASE_TABLENAME_TOPIC, null, initialValues);
     }
 
@@ -109,13 +111,22 @@ public class DBAdapter {
         return topicList;
     }
 
+    public String getCountryName(String country) {
+
+        Cursor cursor = db.query(DATABASE_TABLENAME_TOPIC,
+                new String[]{KEY_TRANSLATE}, KEY_TOPIC + "=?", new String[]{country}, null, null, "id ASC");
+        cursor.moveToFirst();
+        return cursor.getString(0);
+
+    }
+
     //retriever all values from database
     public List<Topic> getAllTopics() throws SQLException {
 
         List<Topic> topicList = new LinkedList<Topic>();
 
         Cursor cursor = db.query(DATABASE_TABLENAME_TOPIC,
-                new String[]{"id", KEY_TOPIC, KEY_TRANSLATED}, null, null, null, null, "id ASC");
+                new String[]{"id", KEY_TOPIC, KEY_TRANSLATE, KEY_TRANSLATED}, null, null, null, null, "id ASC");
 
         Topic topic;
         if (cursor.moveToFirst()) {
@@ -123,7 +134,11 @@ public class DBAdapter {
                 topic = new Topic();
                 topic.setId(cursor.getInt(0));
                 topic.setTopic(cursor.getString(1));
-                topic.setTopicTranslated(cursor.getString(2));
+                topic.setTopicTranslate(cursor.getString(2));
+                if (cursor.getInt(3) == 0)
+                    topic.setTranslated(false);
+                else
+                    topic.setTranslated(true);
                 topicList.add(topic);
             } while (cursor.moveToNext());
         }
@@ -131,10 +146,11 @@ public class DBAdapter {
 
     }
 
-    public boolean updateTopics(int id, String translated) throws SQLException {
+    public boolean updateTopics(int id, String translate) throws SQLException {
 
         ContentValues contentValues = new ContentValues();
-        contentValues.put(KEY_TRANSLATED, translated);
+        contentValues.put(KEY_TRANSLATE, translate);
+        contentValues.put(KEY_TRANSLATED, 1);
 
         return db.update(DATABASE_TABLENAME_TOPIC, contentValues, "id=" + id, null) > 0;
 

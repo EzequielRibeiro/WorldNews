@@ -95,7 +95,7 @@ public class AboutActivity extends AppCompatActivity {
         cardViewInfo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/debo1994"));
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://ezequielportfolio.wordpress.com/contato/"));
                 startActivity(browserIntent);
             }
         });
@@ -103,32 +103,32 @@ public class AboutActivity extends AppCompatActivity {
         cardViewLibrary1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/mikepenz/MaterialDrawer"));
-                startActivity(browserIntent);
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://ezequielportfolio.wordpress.com/contato/"));
+                //  startActivity(browserIntent);
             }
         });
 
         cardViewLibrary2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/square/retrofit"));
-                startActivity(browserIntent);
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://ezequielportfolio.wordpress.com/contato/"));
+                //  startActivity(browserIntent);
             }
         });
 
         cardViewLibrary3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/square/okhttp"));
-                startActivity(browserIntent);
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://ezequielportfolio.wordpress.com/contato/"));
+                //  startActivity(browserIntent);
             }
         });
 
         cardViewLibrary4.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/bumptech/glide"));
-                startActivity(browserIntent);
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://ezequielportfolio.wordpress.com/contato/"));
+                // startActivity(browserIntent);
             }
         });
     }
@@ -138,7 +138,8 @@ public class AboutActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                sendEmail();
+                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://ezequielportfolio.wordpress.com/contato/"));
+                startActivity(browserIntent);
             }
         });
     }
@@ -194,7 +195,7 @@ public class AboutActivity extends AppCompatActivity {
 
     protected void sendEmail() {
         Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
-        emailIntent.setData(Uri.parse("mailto: d.basak.db@gmail.com"));
+        emailIntent.setData(Uri.parse("mailto: aplicativoparamobile@gmail.com"));
         startActivity(Intent.createChooser(emailIntent, "Send feedback"));
     }
 

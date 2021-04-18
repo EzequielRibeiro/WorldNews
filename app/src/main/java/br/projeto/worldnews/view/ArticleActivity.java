@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.content.res.AssetManager;
 import android.graphics.Typeface;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
@@ -32,15 +33,15 @@ import br.projeto.worldnews.model.Constants;
 
 public class ArticleActivity extends AppCompatActivity {
 
-    private String URL;
     private Typeface montserrat_regular;
     private Typeface montserrat_semiBold;
+    private String url;
+    private LoadTask loadTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_article);
-
 
         createToolbar();
         floatingButton();
@@ -68,7 +69,7 @@ public class ArticleActivity extends AppCompatActivity {
 
     private void openWebViewActivity() {
         Intent browserIntent = new Intent(ArticleActivity.this, WebViewActivity.class);
-        browserIntent.putExtra(Constants.INTENT_URL, URL);
+        browserIntent.putExtra(Constants.INTENT_URL, url);
         startActivity(browserIntent);
         this.overridePendingTransition(R.anim.pull_in_right, R.anim.push_out_left);
     }
@@ -78,7 +79,7 @@ public class ArticleActivity extends AppCompatActivity {
         String description = getIntent().getStringExtra(Constants.INTENT_DESCRIPTION);
         String date = getIntent().getStringExtra(Constants.INTENT_DATE);
         String imgURL = getIntent().getStringExtra(Constants.INTENT_IMG_URL);
-        URL = getIntent().getStringExtra(Constants.INTENT_ARTICLE_URL);
+        url = getIntent().getStringExtra(Constants.INTENT_ARTICLE_URL);
 
         TextView content_Headline = findViewById(R.id.content_Headline);
         content_Headline.setText(headLine);
@@ -92,29 +93,8 @@ public class ArticleActivity extends AppCompatActivity {
         content_Date.setText(date);
         content_Date.setTypeface(montserrat_regular);
 
-        ImageView collapsingImage = findViewById(R.id.collapsingImage);
-        Glide.with(this)
-                .load(imgURL)
-                .centerCrop()
-                .error(R.drawable.ic_placeholder)
-                .crossFade()
-                .into(collapsingImage);
-
-
-        Document document = null;
-        try {
-            document = Jsoup.connect(URL).get();
-            String des = document.select("meta[name=description]").first().attr("content");
-            content_Description.setText(des);
-
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-            content_Description.setText(description);
-
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-            content_Description.setText(description);
-        }
+        loadTask = new LoadTask(content_Description);
+        loadTask.execute(new String[]{imgURL, url});
 
     }
 
@@ -136,7 +116,7 @@ public class ArticleActivity extends AppCompatActivity {
                 Intent shareIntent = new Intent();
                 shareIntent.setAction(Intent.ACTION_SEND);
                 shareIntent.setType("text/plain");
-                shareIntent.putExtra(Intent.EXTRA_TEXT, "Check out this news! Send from MyTimes App\n" + Uri.parse(URL));
+                shareIntent.putExtra(Intent.EXTRA_TEXT, "Check out this news! Send from MyTimes App\n" + Uri.parse(url));
                 startActivity(Intent.createChooser(shareIntent, "Share with"));
             }
         });
@@ -155,8 +135,66 @@ public class ArticleActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onBackPressed(){
+    public void onBackPressed() {
         super.onBackPressed();
         overridePendingTransition(R.anim.pull_in_left, R.anim.push_out_right);
+    }
+
+    @Override
+    protected void onDestroy() {
+
+        if (loadTask != null)
+            loadTask.cancel(true);
+        super.onDestroy();
+    }
+
+    private class LoadTask extends AsyncTask<String, Void, String[]> {
+
+        private String des;
+        private TextView textView;
+
+
+        public LoadTask(TextView textView) {
+            this.textView = textView;
+        }
+
+        protected String[] doInBackground(String... url) {
+
+            ImageView collapsingImage = findViewById(R.id.collapsingImage);
+
+            if (getWindow().getDecorView().getRootView().isShown())
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Glide.with(ArticleActivity.this)
+                                .load(url[0])
+                                .centerCrop()
+                                .error(R.drawable.default_news_image)
+                                .crossFade()
+                                .into(collapsingImage);
+                    }
+                });
+
+            Document document = null;
+            try {
+                document = Jsoup.connect(url[1]).get();
+                des = document.select("meta[name=description]").first().attr("content");
+
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+                des = "";
+
+            } catch (NullPointerException e) {
+                e.printStackTrace();
+                des = "";
+            }
+            return new String[]{des};
+        }
+
+        protected void onPostExecute(String... result) {
+            super.onPostExecute(result);
+            if (result[0].length() > 0)
+                textView.setText(result[0]);
+        }
     }
 }

@@ -27,20 +27,23 @@
             android:layout_alignParentLeft="true"
             android:contentDescription="@string/iv_card_my_info"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_profile_pic" />
+            android:src="@drawable/ic_profile_pic"
+            card_view:srcCompat="@mipmap/ic_launcher" />
 
         <TextView
             android:id="@+id/tv_card_info"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginStart="@dimen/tv_card_layout_margin"
+            android:layout_marginLeft="@dimen/tv_card_layout_margin"
             android:layout_marginTop="@dimen/tv_card_layout_margin"
             android:layout_marginEnd="@dimen/tv_card_layout_margin"
             android:layout_marginRight="@dimen/tv_card_layout_margin"
             android:layout_marginBottom="@dimen/tv_card_layout_margin"
             android:layout_toEndOf="@id/iv_card_info"
             android:layout_toRightOf="@id/iv_card_info"
-            android:gravity="center"
-            android:text="@string/debajyoti_basak"
+            android:gravity="left|center_vertical"
+            android:text="@string/name_developer"
             android:textColor="@android:color/black"
             android:textSize="16sp"
             android:textStyle="normal" />

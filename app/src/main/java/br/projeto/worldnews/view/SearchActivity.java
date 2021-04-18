@@ -22,7 +22,6 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import java.util.ArrayList;
 
 import br.projeto.worldnews.R;
-import br.projeto.worldnews.adapter.DataAdapter;
 import br.projeto.worldnews.model.ArticleStructure;
 import br.projeto.worldnews.network.GoogleXmlNews;
 
@@ -32,9 +31,9 @@ public class SearchActivity extends AppCompatActivity {
     private TextView mTxvNoResultsFound;
     private SwipeRefreshLayout mSwipeRefreshSearch;
     private RecyclerView mRecyclerViewSearch;
-    private DataAdapter adapter;
     private Typeface montserrat_regular;
     private ArrayList<ArticleStructure> articleStructure = new ArrayList<>();
+    private GoogleXmlNews googleXmlNews;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -94,65 +93,11 @@ public class SearchActivity extends AppCompatActivity {
     private void searchEverything(final String search) {
         mSwipeRefreshSearch.setEnabled(true);
         mSwipeRefreshSearch.setRefreshing(true);
-        /*
-        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
-        httpClient.addNetworkInterceptor(new ResponseCacheInterceptor());
-        httpClient.addInterceptor(new OfflineResponseCacheInterceptor());
-        httpClient.cache(new Cache(new File(MyTimesApplication.getMyTimesApplicationInstance()
-                .getCacheDir(), "ResponsesCache"), 10 * 1024 * 1024));
-        httpClient.readTimeout(60, TimeUnit.SECONDS);
-        httpClient.connectTimeout(60, TimeUnit.SECONDS);
-        httpClient.addInterceptor(logging);
-
-        ApiInterface request = ApiClient.getClient(httpClient).create(ApiInterface.class);
-
-        String sortBy = "publishedAt";
-        String language = "en";
-        Call<NewsResponse> call = request.getSearchResults(search, sortBy, language, Constants.API_KEY_1);
-        call.enqueue(new Callback<NewsResponse>() {
-
-            @Override
-            public void onResponse(@NonNull Call<NewsResponse> call, @NonNull Response<NewsResponse> response) {
-
-                if (response.isSuccessful() && response.body().getArticles() != null) {
-
-                    if (response.body().getTotalResults() != 0) {
-                        if (!articleStructure.isEmpty()) {
-                            articleStructure.clear();
-                        }
-
-                        articleStructure = response.body().getArticles();
-                        adapter = new DataAdapter(SearchActivity.this, articleStructure);
-                        mRecyclerViewSearch.setVisibility(View.VISIBLE);
-                        mTxvNoResultsFound.setVisibility(View.GONE);
-                        mRecyclerViewSearch.setAdapter(adapter);
-                        mSwipeRefreshSearch.setRefreshing(false);
-                        mSwipeRefreshSearch.setEnabled(false);
-                    } else if (response.body().getTotalResults() == 0){
-                        mSwipeRefreshSearch.setRefreshing(false);
-                        mSwipeRefreshSearch.setEnabled(false);
-                        mTxvNoResultsFound.setVisibility(View.VISIBLE);
-                        mRecyclerViewSearch.setVisibility(View.GONE);
-                        mTxvNoResultsFound.setText("No Results found for \"" + search + "\"." );
-                    }
-                }
-            }
-
-
-            @Override
-            public void onFailure(@NonNull Call<NewsResponse> call, @NonNull Throwable t) {
-                mSwipeRefreshSearch.setRefreshing(false);
-                mSwipeRefreshSearch.setEnabled(false);
-            }
-        });*/
-
         String url = MainActivity.url.replace("topic", search);
 
         Log.e("URL", url);
-        new GoogleXmlNews(url, SearchActivity.this, mRecyclerViewSearch, mSwipeRefreshSearch).execute();
+        googleXmlNews = new GoogleXmlNews(url, SearchActivity.this, mRecyclerViewSearch, mSwipeRefreshSearch);
+        googleXmlNews.execute();
         //https://news.google.com/news?cf=all&hl=lang&pz=1&ned=coun&q=bbc-news&output=rss
 
 
@@ -187,5 +132,12 @@ public class SearchActivity extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         overridePendingTransition(R.anim.pull_in_left, R.anim.push_out_right);
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (googleXmlNews != null)
+            googleXmlNews.cancel(true);
+        super.onDestroy();
     }
 }

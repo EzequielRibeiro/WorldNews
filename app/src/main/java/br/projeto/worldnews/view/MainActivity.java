@@ -38,7 +38,9 @@ import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -58,15 +60,13 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     public static String url = "https://news.google.com/news?cf=all&hl=language&pz=1&ned=country&q=topic&output=rss";
     private final static String LOCALE_DEFAULT = "en";
-    private String[] TOPIC_ARRAY = {"Country", "Business", "Politics", "Science and Technology", "Economy", "Entertainment",
-            "Sports", "Health", "Video game", "BitCoins", "Films", "Travels", "Europe", "South America",
-            "North America", "Asia", "Africa", "Middle East", "Oceania"};
+    private String[] TOPIC_ARRAY = {"Country", "Business", "World", "Finance", "Culture", "Gastronomy", "Youtube",
+            "Hacker", "Politics", "Science", "Technology", "Economy", "Entertainment",
+            "Sports", "Health", "Videogame", "BitCoin", "Films", "Travels", "Europe", "South America",
+            "North America", "Asia", "Africa", "Middle East", "Oceania", "Contact us", "About the app"};
 
-    private String[] SOURCE_ARRAY = {"google-news-in", "bbc-news", "the-hindu", "the-times-of-india",
-            "buzzfeed", "mashable", "mtv-news", "bbc-sport", "espn-cric-info", "talksport", "medical-news-today",
-            "national-geographic", "crypto-coins-news", "engadget", "the-next-web", "the-verge", "techcrunch", "techradar", "ign", "polygon"};
     private String SOURCE;
-
+    private GoogleXmlNews googleXmlNews;
     private ArrayList<ArticleStructure> articleStructure = new ArrayList<>();
     private SwipeRefreshLayout swipeRefreshLayout;
     private Drawer result;
@@ -81,23 +81,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private String countryCode;
     private LinearLayout linearLayoutLoading;
 
-    private static String translate(String langFrom, String langTo, String text) throws IOException {
 
-        final String yourURL = "https://script.google.com/macros/s/AKfycbyHrs_kLCmXJB-fH_mS2ODtud3y0lR4Povq9nE2EqCSBPSiqjF80PNMKJohEV3TrZws/exec";
-        String urlStr = yourURL + "?q=" + URLEncoder.encode(text, "UTF-8") + "&target=" + langTo + "&source="
-                + langFrom;
-        URL url = new URL(urlStr);
-        StringBuilder response = new StringBuilder();
-        HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestProperty("User-Agent", "Mozilla/5.0");
-        BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-        String inputLine;
-        while ((inputLine = in.readLine()) != null) {
-            response.append(inputLine);
-        }
-        in.close();
-        return response.toString();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -127,13 +111,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         if (dbAdapter.getCountTopics() == 0) {
             for (String t : TOPIC_ARRAY)
                 dbAdapter.insertTopics(t, t);
-
         }
         dbAdapter.close();
-
         createToolbar();
         createRecyclerView();
-
         SOURCE = TOPIC_ARRAY[0];
         mTitle.setText(getString(R.string.toolbar_default_text) + " " + SOURCE);
 
@@ -145,6 +126,37 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             onLoadingSwipeRefreshLayout();
             linearLayoutLoading.setVisibility(View.GONE);
             createDrawer(savedInstanceState, toolbar, montserrat_regular);
+        }
+
+    }
+
+    private static String translate(String langFrom, String langTo, String text) {
+
+        final String yourURL = "https://script.google.com/macros/s/AKfycbyHrs_kLCmXJB-fH_mS2ODtud3y0lR4Povq9nE2EqCSBPSiqjF80PNMKJohEV3TrZws/exec";
+
+        try {
+
+            String urlStr = yourURL + "?q=" + URLEncoder.encode(text, "UTF-8") + "&target=" + langTo + "&source="
+                    + langFrom;
+
+            URL url = new URL(urlStr);
+            StringBuilder response = new StringBuilder();
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestProperty("User-Agent", "Mozilla/5.0");
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+            return response.toString();
+
+        } catch (UnsupportedEncodingException | MalformedURLException e) {
+            e.printStackTrace();
+            return "";
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+            return "";
         }
 
     }
@@ -175,75 +187,62 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         topicList = dbAdapter.getAllTopics();
         dbAdapter.close();
 
-        PrimaryDrawerItem item0 = new PrimaryDrawerItem().withIdentifier(0).withName(topicList.get(0).getTopicTranslated())
+        PrimaryDrawerItem item0 = new PrimaryDrawerItem().withIdentifier(0).withName(topicList.get(0).getTopicTranslate())
                 .withIcon(R.drawable.ic_googlenews).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item1 = new PrimaryDrawerItem().withIdentifier(1).withName(topicList.get(1).getTopicTranslated())
+        PrimaryDrawerItem item1 = new PrimaryDrawerItem().withIdentifier(1).withName(topicList.get(1).getTopicTranslate())
                 .withIcon(R.drawable.ic_googlenews).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item2 = new PrimaryDrawerItem().withIdentifier(2).withName(topicList.get(2).getTopicTranslated())
+        PrimaryDrawerItem item2 = new PrimaryDrawerItem().withIdentifier(2).withName(topicList.get(2).getTopicTranslate())
                 .withIcon(R.drawable.ic_bbcnews).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item3 = new PrimaryDrawerItem().withIdentifier(3).withName(topicList.get(3).getTopicTranslated())
+        PrimaryDrawerItem item3 = new PrimaryDrawerItem().withIdentifier(3).withName(topicList.get(3).getTopicTranslate())
                 .withIcon(R.drawable.ic_thehindu).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item4 = new PrimaryDrawerItem().withIdentifier(4).withName(topicList.get(4).getTopicTranslated())
+        PrimaryDrawerItem item4 = new PrimaryDrawerItem().withIdentifier(4).withName(topicList.get(4).getTopicTranslate())
                 .withIcon(R.drawable.ic_timesofindia).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item5 = new PrimaryDrawerItem().withIdentifier(5).withName(topicList.get(5).getTopicTranslated())
+        PrimaryDrawerItem item5 = new PrimaryDrawerItem().withIdentifier(5).withName(topicList.get(5).getTopicTranslate())
                 .withIcon(R.drawable.ic_googlenews).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item6 = new PrimaryDrawerItem().withIdentifier(6).withName(topicList.get(6).getTopicTranslated())
+        PrimaryDrawerItem item6 = new PrimaryDrawerItem().withIdentifier(6).withName(topicList.get(6).getTopicTranslate())
                 .withIcon(R.drawable.ic_buzzfeednews).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item7 = new PrimaryDrawerItem().withIdentifier(7).withName(topicList.get(7).getTopicTranslated())
+        PrimaryDrawerItem item7 = new PrimaryDrawerItem().withIdentifier(7).withName(topicList.get(7).getTopicTranslate())
                 .withIcon(R.drawable.ic_mashablenews).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item8 = new PrimaryDrawerItem().withIdentifier(8).withName(topicList.get(8).getTopicTranslated())
+        PrimaryDrawerItem item8 = new PrimaryDrawerItem().withIdentifier(8).withName(topicList.get(8).getTopicTranslate())
                 .withIcon(R.drawable.ic_mtvnews).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item9 = new PrimaryDrawerItem().withIdentifier(9).withName(topicList.get(9).getTopicTranslated())
+        PrimaryDrawerItem item9 = new PrimaryDrawerItem().withIdentifier(9).withName(topicList.get(9).getTopicTranslate())
                 .withIcon(R.drawable.ic_googlenews).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item10 = new PrimaryDrawerItem().withIdentifier(10).withName(topicList.get(10).getTopicTranslated())
+        PrimaryDrawerItem item10 = new PrimaryDrawerItem().withIdentifier(10).withName(topicList.get(10).getTopicTranslate())
                 .withIcon(R.drawable.ic_bbcsports).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item11 = new PrimaryDrawerItem().withIdentifier(11).withName(topicList.get(11).getTopicTranslated())
+        PrimaryDrawerItem item11 = new PrimaryDrawerItem().withIdentifier(11).withName(topicList.get(11).getTopicTranslate())
                 .withIcon(R.drawable.ic_espncricinfo).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item12 = new PrimaryDrawerItem().withIdentifier(12).withName(topicList.get(12).getTopicTranslated())
+        PrimaryDrawerItem item12 = new PrimaryDrawerItem().withIdentifier(12).withName(topicList.get(12).getTopicTranslate())
                 .withIcon(R.drawable.ic_talksport).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item13 = new PrimaryDrawerItem().withIdentifier(13).withName(topicList.get(13).getTopicTranslated())
+        PrimaryDrawerItem item13 = new PrimaryDrawerItem().withIdentifier(13).withName(topicList.get(13).getTopicTranslate())
                 .withIcon(R.drawable.ic_googlenews).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item14 = new PrimaryDrawerItem().withIdentifier(14).withName(topicList.get(14).getTopicTranslated())
+        PrimaryDrawerItem item14 = new PrimaryDrawerItem().withIdentifier(14).withName(topicList.get(14).getTopicTranslate())
                 .withIcon(R.drawable.ic_medicalnewstoday).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item15 = new PrimaryDrawerItem().withIdentifier(15).withName(topicList.get(15).getTopicTranslated())
+        PrimaryDrawerItem item15 = new PrimaryDrawerItem().withIdentifier(15).withName(topicList.get(15).getTopicTranslate())
                 .withIcon(R.drawable.ic_nationalgeographic).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item16 = new PrimaryDrawerItem().withIdentifier(16).withName(topicList.get(16).getTopicTranslated())
+        PrimaryDrawerItem item16 = new PrimaryDrawerItem().withIdentifier(16).withName(topicList.get(16).getTopicTranslate())
                 .withIcon(R.drawable.ic_googlenews).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item17 = new PrimaryDrawerItem().withIdentifier(17).withName(topicList.get(17).getTopicTranslated())
+        PrimaryDrawerItem item17 = new PrimaryDrawerItem().withIdentifier(17).withName(topicList.get(17).getTopicTranslate())
                 .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item18 = new PrimaryDrawerItem().withIdentifier(18).withName(topicList.get(18).getTopicTranslated())
+        PrimaryDrawerItem item18 = new PrimaryDrawerItem().withIdentifier(18).withName(topicList.get(18).getTopicTranslate())
                 .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
-        SecondaryDrawerItem item19 = new SecondaryDrawerItem().withIdentifier(19).withName("Contact us")
+        PrimaryDrawerItem item19 = new PrimaryDrawerItem().withIdentifier(19).withName(topicList.get(19).getTopicTranslate())
+                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+        PrimaryDrawerItem item20 = new PrimaryDrawerItem().withIdentifier(20).withName(topicList.get(20).getTopicTranslate())
+                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+        PrimaryDrawerItem item21 = new PrimaryDrawerItem().withIdentifier(21).withName(topicList.get(21).getTopicTranslate())
+                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+        PrimaryDrawerItem item22 = new PrimaryDrawerItem().withIdentifier(22).withName(topicList.get(22).getTopicTranslate())
+                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+        PrimaryDrawerItem item23 = new PrimaryDrawerItem().withIdentifier(23).withName(topicList.get(23).getTopicTranslate())
+                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+        PrimaryDrawerItem item24 = new PrimaryDrawerItem().withIdentifier(24).withName(topicList.get(24).getTopicTranslate())
+                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+        PrimaryDrawerItem item25 = new PrimaryDrawerItem().withIdentifier(25).withName(topicList.get(25).getTopicTranslate())
+                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+        SecondaryDrawerItem item26 = new SecondaryDrawerItem().withIdentifier(26).withName(topicList.get(26).getTopicTranslate())
                 .withIcon(R.drawable.ic_mail).withTypeface(montserrat_regular);
-        SecondaryDrawerItem item20 = new SecondaryDrawerItem().withIdentifier(20).withName("About the app")
+        SecondaryDrawerItem item27 = new SecondaryDrawerItem().withIdentifier(27).withName(topicList.get(27).getTopicTranslate())
                 .withIcon(R.drawable.ic_info).withTypeface(montserrat_regular);
-
-       /* PrimaryDrawerItem item18 = new PrimaryDrawerItem().withIdentifier(18).withName(topicList.get(18).getTopicTranslated())
-                .withIcon(R.drawable.ic_engadget).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item19 = new PrimaryDrawerItem().withIdentifier(19).withName("The Car")
-                .withIcon(R.drawable.ic_thenextweb).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item20 = new PrimaryDrawerItem().withIdentifier(20).withName("The Verge")
-                .withIcon(R.drawable.ic_theverge).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item21 = new PrimaryDrawerItem().withIdentifier(21).withName("TechCrunch")
-                .withIcon(R.drawable.ic_techcrunch).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item22 = new PrimaryDrawerItem().withIdentifier(22).withName("TechRadar")
-                .withIcon(R.drawable.ic_techradar).withTypeface(montserrat_regular);
-        SectionDrawerItem item23 = new SectionDrawerItem().withIdentifier(23).withName("GAMING")
-                .withTypeface(montserrat_regular);
-        PrimaryDrawerItem item24 = new PrimaryDrawerItem().withIdentifier(24).withName("IGN")
-                .withIcon(R.drawable.ic_ignnews).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item25 = new PrimaryDrawerItem().withIdentifier(25).withName("Polygon")
-                .withIcon(R.drawable.ic_polygonnews).withTypeface(montserrat_regular);
-        SectionDrawerItem item26 = new SectionDrawerItem().withIdentifier(26).withName("MORE INFO")
-                .withTypeface(montserrat_regular);
-        SecondaryDrawerItem item27 = new SecondaryDrawerItem().withIdentifier(27).withName("About the app")
-                .withIcon(R.drawable.ic_info).withTypeface(montserrat_regular);
-        SecondaryDrawerItem item28 = new SecondaryDrawerItem().withIdentifier(28).withName("Open Source")
-                .withIcon(R.drawable.ic_code).withTypeface(montserrat_regular);
-        SecondaryDrawerItem item29 = new SecondaryDrawerItem().withIdentifier(29).withName("Powered by newsapi.org")
-                .withIcon(R.drawable.ic_power).withTypeface(montserrat_regular);
-        SecondaryDrawerItem item30 = new SecondaryDrawerItem().withIdentifier(30).withName("Contact us")
-                .withIcon(R.drawable.ic_mail).withTypeface(montserrat_regular);*/
 
         accountHeader = new AccountHeaderBuilder()
                 .withActivity(this)
@@ -257,28 +256,27 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 .withToolbar(toolbar)
                 .withSelectedItem(0)
                 .addDrawerItems(item0, item1, item2, item3, item4, item5, item6, item7, item8, item9,
-                        item10, item11, item12, item13, item14, item15, item16, item17, item18, item19, item20)
+                        item10, item11, item12, item13, item14, item15, item16, item17, item18, item19, item20,
+                        item21, item22, item23, item24, item25, item26, item27)
                 .withOnDrawerItemClickListener(new OnDrawerItemClickListener() {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
 
                         int selected = (int) (long) position - 1;
 
-                        if (selected < 18) {
-                            SOURCE = topicList.get(selected).getTopicTranslated();
+                        if (selected <= 25) {
+                            SOURCE = topicList.get(selected).getTopicTranslate();
                             mTitle.setText(((Nameable) drawerItem).getName().getText(MainActivity.this));
                             onLoadingSwipeRefreshLayout();
                         }
 
                         switch (selected) {
 
-                            case 19:
+                            case 26:
                                 sendEmail();
-                                ;
                                 break;
-                            case 20:
-                                Intent browserAPI = new Intent(Intent.ACTION_VIEW, Uri.parse("https://newsapi.org/"));
-                                startActivity(browserAPI);
+                            case 27:
+                                openAboutActivity();
                                 break;
                             default:
                                 break;
@@ -298,7 +296,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         String url = this.url.replace("topic", SOURCE);
 
         Log.e("URL", url);
-        new GoogleXmlNews(url, MainActivity.this, recyclerView, swipeRefreshLayout).execute();
+        googleXmlNews = new GoogleXmlNews(url, MainActivity.this, recyclerView, swipeRefreshLayout);
+        googleXmlNews.execute();
         //https://news.google.com/news?cf=all&hl=lang&pz=1&ned=coun&q=bbc-news&output=rss
 
 
@@ -373,7 +372,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         } else {
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.MyAlertDialogStyle);
             builder.setTitle(R.string.app_name);
-            builder.setIcon(R.mipmap.ic_launcher_round);
+            builder.setIcon(R.drawable.ic_launcher);
             builder.setMessage("Do you want to Exit?")
                     .setCancelable(false)
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -429,26 +428,31 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     }
 
+    @Override
+    protected void onDestroy() {
+        if (googleXmlNews != null)
+            googleXmlNews.cancel(true);
+        super.onDestroy();
+    }
+
     private class Loading extends AsyncTask {
+
+        DBAdapter dbAdapter = new DBAdapter(getApplicationContext());
 
         @Override
         protected Object doInBackground(Object[] objects) {
-            DBAdapter dbAdapter = new DBAdapter(getApplicationContext());
-            topicList = dbAdapter.getAllTopics();
 
+            topicList = dbAdapter.getAllTopics();
             for (int i = 1; i < topicList.size(); i++) {
                 String topic = topicList.get(i).getTopic();
-                String translated = topicList.get(i).getTopicTranslated();
-
-                if (topic.equals(translated) && !topic.equals("BitCoins")) {
-                    try {
-                        dbAdapter.updateTopics(topicList.get(i).getId(), translate(LOCALE_DEFAULT, locale.getLanguage(), topic));
-                    } catch (IOException ioException) {
-                        ioException.printStackTrace();
-                    }
+                String translate = "";
+                if (!topicList.get(i).isTranslated()) {
+                    translate = translate(LOCALE_DEFAULT, locale.getLanguage(), topic);
+                    if (translate.length() > 0)
+                        dbAdapter.updateTopics(topicList.get(i).getId(), translate);
                 }
             }
-            dbAdapter.close();
+
             return null;
         }
 
@@ -457,6 +461,9 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             super.onPostExecute(o);
             onLoadingSwipeRefreshLayout();
             linearLayoutLoading.setVisibility(View.GONE);
+            SOURCE = dbAdapter.getCountryName(SOURCE);
+            dbAdapter.close();
+            mTitle.setText(getString(R.string.toolbar_default_text) + " " + SOURCE);
             createDrawer(getIntent().getExtras(), toolbar, montserrat_regular);
 
         }

@@ -37,6 +37,7 @@ public class DataAdapterArticle extends RecyclerView.Adapter<DataAdapterArticle.
     private Context mContext;
     private int lastPosition = -1;
     private int position = 0;
+    private LoadImagemTask loadImagemTask;
 
     public DataAdapterArticle(Context mContext, ArrayList<Article> articles) {
         this.mContext = mContext;
@@ -63,21 +64,18 @@ public class DataAdapterArticle extends RecyclerView.Adapter<DataAdapterArticle.
         }
 
         holder.tv_card_main_title.setText(title);
-        holder.img_card_main.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_placeholder));
+        //   holder.img_card_main.setImageDrawable(mContext.getResources().getDrawable(R.drawable.ic_placeholder));
         String url = articles.get(position).getUrl();
-        new LoadImagemTask(holder.img_card_main, position).execute(url);
-       /*try {
+        loadImagemTask = new LoadImagemTask(holder.img_card_main, position);
+        loadImagemTask.execute(url);
 
-            articles.get(position).setUrlToImage(ImageExtractor.extractImageUrl(url));
-            Glide.with(mContext)
-                    .load(articles.get(position).getUrlToImage())
-                    .thumbnail(0.1f)
-                    .centerCrop()
-                    .error(R.drawable.ic_placeholder)
-                    .into(holder.img_card_main);
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-        }*/
+        Glide.with(mContext)
+                .load(R.drawable.loading)
+                .thumbnail(0.1f)
+                .centerCrop()
+                .error(R.drawable.default_news_image)
+                .into(holder.img_card_main);
+
 
         if (position > lastPosition) {
             Animation animation = AnimationUtils.loadAnimation(mContext, R.anim.item_animation_fall_down);
@@ -118,7 +116,7 @@ public class DataAdapterArticle extends RecyclerView.Adapter<DataAdapterArticle.
             String headLine = articles.get(getAdapterPosition()).getTitle();
             if (headLine.endsWith(" - Times of India")) {
                 headLine = headLine.replace(" - Times of India", "");
-            } else if(headLine.endsWith(" - Firstpost")) {
+            } else if (headLine.endsWith(" - Firstpost")) {
                 headLine = headLine.replace(" - Firstpost", "");
             }
             String description = articles.get(getAdapterPosition()).getDescription();
@@ -138,6 +136,8 @@ public class DataAdapterArticle extends RecyclerView.Adapter<DataAdapterArticle.
 
             ((Activity) mContext).overridePendingTransition(R.anim.pull_in_right, R.anim.push_out_left);
         }
+
+
     }
 
     private class LoadImagemTask extends AsyncTask<String, Void, String[]> {
@@ -163,12 +163,14 @@ public class DataAdapterArticle extends RecyclerView.Adapter<DataAdapterArticle.
 
         protected void onPostExecute(String... urlImage) {
             super.onPostExecute(urlImage);
-            Glide.with(mContext)
-                    .load(urlImage[0])
-                    .thumbnail(0.1f)
-                    .centerCrop()
-                    .error(R.drawable.ic_placeholder)
-                    .into(imageView);
+            Activity activity = (Activity) mContext;
+            if (activity.getWindow().getDecorView().getRootView().isShown())
+                Glide.with(mContext)
+                        .load(urlImage[0])
+                        .thumbnail(0.1f)
+                        .centerCrop()
+                        .error(R.drawable.default_news_image)
+                        .into(imageView);
 
         }
     }

@@ -5,8 +5,17 @@ public class Topic {
 
     private int id = -1;
     private String topic = "";
-    private String topicTranslated = "";
+    private String topicTranslate = "";
     private String args = "";
+    private boolean translated = false;
+
+    public boolean isTranslated() {
+        return translated;
+    }
+
+    public void setTranslated(boolean translated) {
+        this.translated = translated;
+    }
 
     public String getArgs() {
         return args;
@@ -32,15 +41,13 @@ public class Topic {
         this.topic = topic;
     }
 
-    public String getTopicTranslated() {
-        return topicTranslated;
+    public String getTopicTranslate() {
+        return topicTranslate;
     }
 
-    public void setTopicTranslated(String topicTranslated) {
-        this.topicTranslated = topicTranslated;
+    public void setTopicTranslate(String topicTranslated) {
+        this.topicTranslate = topicTranslated;
     }
-
-
 
 
 }

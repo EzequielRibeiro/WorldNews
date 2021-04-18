@@ -1,28 +1,27 @@
 <resources>
-    <string name="app_name">MyTimes</string>
-    <string name="title_activity_article">MyTimes</string>
+    <string name="app_name">NewsApp</string>
+    <string name="title_activity_article">NewsApp - Article</string>
     <string name="article_activity_author">AUTHOR:</string>
-    <string name="article_activity_source">SOURCE: Times of India</string>
-    <string name="article_activity_date">DATE:</string>
-    <string name="menu_title_url">url</string>
     <string name="iv_card_content_description_image">Image of the news response</string>
     <string name="collasping_image">Collasping Image</string>
     <string name="menu_title_about">About the app</string>
-    <string name="tv_made_with_love_by">Made with &#9829; by</string>
+    <string name="tv_made_with_love_by">Made by</string>
     <string name="iv_card_my_info">My Photo</string>
-    <string name="tv_libraries_used">Libraries Used</string>
+    <string name="tools_used">Tools Used</string>
     <string name="toolbar_default_text">News</string>
     <string name="title_about_the_app">About the app</string>
-    <string name="debajyoti_basak">Debajyoti Basak</string>
-    <string name="mytimes_logo">MyTimes Logo</string>
-    <string name="newsapi_tag">A beautiful News Reader powered by www.newsapi.org</string>
-    <string name="material_drawer">Material Drawer</string>
-    <string name="mike_penz">Mike Penz</string>
-    <string name="retrofit">Retrofit</string>
-    <string name="square">Square</string>
-    <string name="okhttp">OkHttp</string>
-    <string name="glide">Glide</string>
-    <string name="bumptech">Bumptech</string>
+    <string name="name_developer">Ezequiel A. Ribeiro</string>
+    <string name="mytimes_logo">Logo</string>
+    <string name="info_tag">This app is using engine search Google</string>
+    <string name="android_studio">Android Studio</string>
+    <string name="android_studio_support">Java, Kotlin e C++</string>
+    <string name="notepad">NotePad++</string>
+    <string name="notepad_description">Awesome text Editor</string>
+    <string name="stackoverflow">Stackoverflow</string>
+    <string name="stackoverflow_description">Who never ?</string>
+    <string name="coffee">Coffee</string>
+    <string name="coffee_description">1.5L</string>
+
     <string name="read_the_full_article">Read the full article</string>
     <string name="banner_ad_unit_id" translatable="false">ca-app-pub-0822808376839371/8901462039</string>
     <string name="intersticial_unit_id" translatable="false">ca-app-pub-0822808376839371/6988016074</string>

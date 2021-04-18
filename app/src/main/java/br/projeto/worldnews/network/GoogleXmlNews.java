@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.recyclerview.widget.RecyclerView;
@@ -26,10 +27,12 @@ import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import br.projeto.worldnews.MyTimesApplication;
+import br.projeto.worldnews.R;
 import br.projeto.worldnews.adapter.DataAdapterArticle;
 import br.projeto.worldnews.model.Article;
 import br.projeto.worldnews.network.interceptors.OfflineResponseCacheInterceptor;
 import br.projeto.worldnews.network.interceptors.ResponseCacheInterceptor;
+import br.projeto.worldnews.view.SearchActivity;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -46,6 +49,7 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
     private RecyclerView recyclerView;
     private SwipeRefreshLayout swipeRefreshLayout;
     private Exception exception;
+    private DataAdapterArticle adapter;
 
 
     public GoogleXmlNews(String url, Activity context, RecyclerView recyclerView, SwipeRefreshLayout swipeRefreshLayout) {
@@ -109,13 +113,6 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
 
                 }
             }
-            context.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (list.size() < 1)
-                        Toast.makeText(context, "no results found", Toast.LENGTH_LONG).show();
-                }
-            });
 
 
         } catch (MalformedURLException e) {
@@ -168,27 +165,6 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
 
             if (response.isSuccessful()) {
                 readXML();
-
-                context.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        recyclerView.setVisibility(View.VISIBLE);
-                        swipeRefreshLayout.setRefreshing(false);
-                        swipeRefreshLayout.setEnabled(false);
-                    }
-                });
-
-            } else {
-
-                context.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        swipeRefreshLayout.setRefreshing(false);
-                        swipeRefreshLayout.setEnabled(false);
-                        swipeRefreshLayout.setVisibility(View.GONE);
-                        Toast.makeText(context, "no results found", Toast.LENGTH_LONG).show();
-                    }
-                });
             }
 
         } catch (IOException ioException) {
@@ -229,23 +205,23 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
         return result;
     }
 
-    private String extractImageUrl(String urlImage){
+    private String extractImageUrl(String urlImage) {
 
         Document doc = null;
         String imageUrl = "";
         try {
             doc = Jsoup.connect(urlImage).get();
             Element elementImage = doc.select("meta[property=og:image]").first();
-            if (elementImage!=null && !elementImage.attr("content").isEmpty()) {
+            if (elementImage != null && !elementImage.attr("content").isEmpty()) {
                 imageUrl = elementImage.attr("content");
-            }else{
+            } else {
                 elementImage = doc.select("link[rel=image_src]").first();
-                if(elementImage!=null && !elementImage.attr("href").isEmpty()){
+                if (elementImage != null && !elementImage.attr("href").isEmpty()) {
                     imageUrl = elementImage.attr("href");
-                }else{
+                } else {
                     elementImage = doc.select("img[src~=(?i)\\.(png|jpe?g)]").first();
-                    if(elementImage!=null){
-                        imageUrl= elementImage.attr("src");
+                    if (elementImage != null) {
+                        imageUrl = elementImage.attr("src");
                     }
                 }
             }
@@ -254,7 +230,7 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
             ioException.printStackTrace();
         }
 
-            return imageUrl;
+        return imageUrl;
 
     }
 
@@ -288,7 +264,7 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
         parser.require(XmlPullParser.END_TAG, ns, "description");
         try {
             description = description.substring(description.indexOf("target=\"_blank\">") + 16, description.indexOf("</a>"));
-        }catch (StringIndexOutOfBoundsException e){
+        } catch (StringIndexOutOfBoundsException e) {
             e.printStackTrace();
             return " ";
         }
@@ -322,12 +298,36 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
             return null;
         }
     }
+
     protected void onPostExecute(String result) {
         super.onPostExecute(result);
 
-        DataAdapterArticle adapter = new DataAdapterArticle(context, list);
+        adapter = new DataAdapterArticle(context, list);
         recyclerView.setAdapter(adapter);
-        swipeRefreshLayout.setRefreshing(false);
+
+        context.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                TextView textView = context.findViewById(R.id.tv_no_results);
+
+                if (list.isEmpty()) {
+                    swipeRefreshLayout.setRefreshing(false);
+                    swipeRefreshLayout.setEnabled(false);
+                    recyclerView.setVisibility(View.GONE);
+                    if (context instanceof SearchActivity)
+                        textView.setVisibility(View.VISIBLE);
+
+                } else {
+                    recyclerView.setVisibility(View.VISIBLE);
+                    swipeRefreshLayout.setRefreshing(false);
+                    swipeRefreshLayout.setEnabled(false);
+
+                    if (context instanceof SearchActivity)
+                        textView.setVisibility(View.GONE);
+                }
+            }
+        });
+
 
     }
 

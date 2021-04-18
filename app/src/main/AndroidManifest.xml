@@ -31,7 +31,7 @@
             tools:targetApi="jelly_bean">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.news.droiddebo.worldnews.view.MainActivity" />
+                android:value="br.projeto.worldnews.view.MainActivity" />
         </activity>
         <activity
             android:name=".view.AboutActivity"
@@ -41,14 +41,14 @@
             tools:targetApi="jelly_bean">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.news.droiddebo.worldnews.view.MainActivity" />
+                android:value="br.projeto.worldnews.view.MainActivity" />
         </activity>
         <activity
             android:name=".view.WebViewActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.news.droiddebo.worldnews.view.ArticleActivity" />
+                android:value="br.projeto.worldnews.view.ArticleActivity" />
         </activity>
         <activity android:name=".view.SearchActivity"
             android:parentActivityName=".view.MainActivity"
@@ -56,7 +56,7 @@
             tools:targetApi="jelly_bean">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="com.news.droiddebo.worldnews.view.MainActivity" />
+                android:value="br.projeto.worldnews.view.MainActivity" />
         </activity>
     </application>
 

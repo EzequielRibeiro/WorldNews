@@ -35,7 +35,7 @@
         android:layout_marginTop="5dp"
         android:layout_marginRight="8dp"
         android:layout_marginBottom="20dp"
-        android:text="@string/newsapi_tag"
+        android:text="@string/info_tag"
         android:textColor="@android:color/white"
         android:textSize="12sp"
         android:textStyle="normal" />
