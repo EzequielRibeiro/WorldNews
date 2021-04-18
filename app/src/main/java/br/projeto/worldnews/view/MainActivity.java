@@ -299,7 +299,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         String url = this.url.replace("topic", SOURCE);
 
         if(SOURCE.equals("Google News")
-        url = 
+        url = "https://news.google.com/rss?hl="+locale.getLanguage()+"&gl="+countryCode;
+
         googleXmlNews = new GoogleXmlNews(url, MainActivity.this, recyclerView, swipeRefreshLayout);
         googleXmlNews.execute();
         //https://news.google.com/news?cf=all&hl=lang&pz=1&ned=coun&q=bbc-news&output=rss
