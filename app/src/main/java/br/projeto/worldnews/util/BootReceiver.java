@@ -97,7 +97,7 @@ public class BootReceiver extends BroadcastReceiver {
     private void notification(Context context) {
 
         Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher_round);
-        
+        String NOTIFICATION_CHANNEL_ID = "101016";
         Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         int importance = NotificationManager.IMPORTANCE_LOW;
         NotificationChannel notificationChannel = null;
