@@ -97,25 +97,52 @@ public class BootReceiver extends BroadcastReceiver {
     private void notification(Context context) {
 
         Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher_round);
-        Intent intent = new Intent(context, MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+        
+        Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        int importance = NotificationManager.IMPORTANCE_LOW;
+        NotificationChannel notificationChannel = null;
+        NotificationManager notificationManager;
 
-        NotificationCompat.Builder notification = new NotificationCompat.Builder(context, "AppNews")
-                .setContentIntent(pendingIntent)
-                .setSmallIcon(R.drawable.ic_launcher_round)
-                .setContentTitle(context.getString(R.string.app_name))
-                .setContentText(context.getString(R.string.news_has_arrived_notification))
-                .setLargeIcon(bitmap)
-                .setStyle(new NotificationCompat.InboxStyle()
-                        .addLine(list.get(0).getTitle())
-                        .addLine(list.get(1).getTitle())
-                        .addLine(list.get(2).getTitle())
-                        .addLine(list.get(3).getTitle())
-                        .addLine(list.get(4).getTitle()));
+        Intent resultIntent = new Intent(context, MainActivity.class);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
+        stackBuilder.addParentStack(MainActivity.class);
+        stackBuilder.addNextIntent(resultIntent);
+        PendingIntent resultPendingIntent =
+                stackBuilder.getPendingIntent(
+                        0,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
 
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-        notificationManager.notify(0, notification.build());
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "NewApp", importance);
+            notificationChannel.enableLights(true);
+            notificationChannel.setLightColor(Color.RED);
+            notificationChannel.enableVibration(true);
+            notificationChannel.setVibrationPattern(new long[]{100, 200, 300, 400, 500, 400, 300, 200, 400});
+            notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.createNotificationChannel(notificationChannel);
+        } else {
+            notificationManager =
+                    (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+        }
+
+        NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+                        .setAutoCancel(true)
+                        .setSound(alarmSound)
+                        .setSmallIcon(R.drawable.ic_launcher_round)
+                        .setLargeIcon(bipmap)
+                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+                        .setContentTitle(context.getResources().getString(R.string.app_name))
+                        .setSubText(context.getString(R.string.versiculo_do_dia))
+                        .setContentText(versDoDia.getAssunto() +
+                                " - " + versDoDia.getBooksName() +
+                                " " + versDoDia.getChapter() +
+                                ":" + versDoDia.getVersesNum() + " ");
+
+        mBuilder.setContentIntent(resultPendingIntent);
+        notificationManager.notify(1518, mBuilder.build());
     }
 
     private class myTask extends AsyncTask<String, Void, Boolean> {
