@@ -66,6 +66,13 @@
             </Attribute>
           </value>
         </entry>
+        <entry key="\app\src\main\java\br\projeto\worldnews\util\BootReceiver.java">
+          <value>
+            <Attribute>
+              <option name="separator" value=";" />
+            </Attribute>
+          </value>
+        </entry>
         <entry key="\app\src\main\java\br\projeto\worldnews\view\MainActivity.java">
           <value>
             <Attribute>
@@ -77,6 +84,13 @@
           <value>
             <Attribute>
               <option name="separator" value=";" />
+            </Attribute>
+          </value>
+        </entry>
+        <entry key="\app\src\main\res\layout\card_info.xml">
+          <value>
+            <Attribute>
+              <option name="separator" value=":" />
             </Attribute>
           </value>
         </entry>

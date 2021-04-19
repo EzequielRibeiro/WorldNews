@@ -395,7 +395,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         } else {
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.MyAlertDialogStyle);
             builder.setTitle(R.string.app_name);
-            builder.setIcon(R.drawable.ic_launcher);
+            builder.setIcon(R.drawable.ic_launcher_round);
             builder.setMessage("Do you want to Exit?")
                     .setCancelable(false)
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -448,7 +448,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         alarmMgr.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                SystemClock.elapsedRealtime() + AlarmManager.INTERVAL_HALF_HOUR,
+                SystemClock.elapsedRealtime() + AlarmManager.INTERVAL_FIFTEEN_MINUTES,
                 AlarmManager.INTERVAL_HALF_HOUR, alarmIntent);
     }
 
@@ -463,7 +463,9 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         Intent intent = new Intent(MainActivity.this, BootReceiver.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         boolean alarmUp = (PendingIntent.getBroadcast(MainActivity.this, 0, intent, PendingIntent.FLAG_NO_CREATE) != null);
+
         return alarmUp;
+
     }
 
     @Override

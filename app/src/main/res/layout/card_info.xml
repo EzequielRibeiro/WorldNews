@@ -27,8 +27,8 @@
             android:layout_alignParentLeft="true"
             android:contentDescription="@string/iv_card_my_info"
             android:scaleType="centerCrop"
-            android:src="@drawable/ic_profile_pic"
-            card_view:srcCompat="@mipmap/ic_launcher" />
+            android:src="@mipmap/ic_launcher_round"
+            card_view:srcCompat="@mipmap/ic_launcher_round" />
 
         <TextView
             android:id="@+id/tv_card_info"

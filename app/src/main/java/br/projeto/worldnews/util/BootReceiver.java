@@ -5,6 +5,8 @@ import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.SystemClock;
@@ -43,6 +45,7 @@ import static br.projeto.worldnews.network.GoogleXmlNews.readTitle;
 public class BootReceiver extends BroadcastReceiver {
 
     private Context context;
+    private List<Article> list = new ArrayList<>();
 
     @Override
     public void onReceive(Context context, Intent intent) {
@@ -64,20 +67,58 @@ public class BootReceiver extends BroadcastReceiver {
                     context, 0, i, PendingIntent.FLAG_UPDATE_CURRENT);
 
             alarmMgr.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                    SystemClock.elapsedRealtime() + AlarmManager.INTERVAL_HOUR * 6,
+                    SystemClock.elapsedRealtime() + AlarmManager.INTERVAL_HOUR * 8,
                     AlarmManager.INTERVAL_HALF_HOUR, alarmIntent);
             Log.e("Alarm", "testando1");
         } else {
             Log.e("Alarm", "testando");
+
+            Article a = new Article();
+            a.setTitle("aaaaaaaaaaaaa");
+            Article b = new Article();
+            a.setTitle("bbbbbbbbbbbbb");
+            Article c = new Article();
+            a.setTitle("ccccccccccccccc");
+            Article d = new Article();
+            a.setTitle("dddddddddddddddd");
+            Article e = new Article();
+            a.setTitle("eeeeeeeeeeeeeee");
+            list.add(a);
+            list.add(b);
+            list.add(c);
+            list.add(d);
+            list.add(e);
+            notification(context);
             if (UtilityMethods.isNetworkAvailable())
                 new myTask().execute(url);
         }
     }
 
+    private void notification(Context context) {
+
+        Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher_round);
+        Intent intent = new Intent(context, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
+
+        NotificationCompat.Builder notification = new NotificationCompat.Builder(context, "AppNews")
+                .setContentIntent(pendingIntent)
+                .setSmallIcon(R.drawable.ic_launcher_round)
+                .setContentTitle(context.getString(R.string.app_name))
+                .setContentText(context.getString(R.string.news_has_arrived_notification))
+                .setLargeIcon(bitmap)
+                .setStyle(new NotificationCompat.InboxStyle()
+                        .addLine(list.get(0).getTitle())
+                        .addLine(list.get(1).getTitle())
+                        .addLine(list.get(2).getTitle())
+                        .addLine(list.get(3).getTitle())
+                        .addLine(list.get(4).getTitle()));
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
+        notificationManager.notify(0, notification.build());
+    }
+
     private class myTask extends AsyncTask<String, Void, Boolean> {
-
-
-        private List<Article> list = new ArrayList<>();
 
         @Override
         protected Boolean doInBackground(String[] url) {
@@ -144,32 +185,6 @@ public class BootReceiver extends BroadcastReceiver {
                 dbAdapter.close();
                 notification(context);
             }
-        }
-
-        private void notification(Context context) {
-
-
-            Intent intent = new Intent(context, MainActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-            PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, intent, 0);
-
-            NotificationCompat.Builder mBuilder =
-                    new NotificationCompat.Builder(context, "NewsApp")
-                            .setSmallIcon(R.drawable.ic_launcher)
-                            .setContentTitle(context.getString(R.string.app_name))
-                            .setContentText(context.getResources().getString(R.string.news_has_arrived_notification))
-                            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                            .setContentIntent(pendingIntent)
-                            .setAutoCancel(true)
-                            .setStyle(new NotificationCompat.InboxStyle()
-                                    .addLine(list.get(0).getTitle())
-                                    .addLine(list.get(1).getTitle())
-                                    .addLine(list.get(2).getTitle())
-                                    .addLine(list.get(3).getTitle())
-                                    .addLine(list.get(4).getTitle()));
-
-            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(context);
-            notificationManager.notify(0, mBuilder.build());
         }
 
 
