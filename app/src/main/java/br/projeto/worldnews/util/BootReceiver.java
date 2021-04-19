@@ -1,19 +1,24 @@
 package br.projeto.worldnews.util;
 
 import android.app.AlarmManager;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
-import androidx.core.app.NotificationManagerCompat;
+import androidx.core.app.TaskStackBuilder;
 
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
@@ -97,9 +102,8 @@ public class BootReceiver extends BroadcastReceiver {
     private void notification(Context context) {
 
         Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher_round);
-        String NOTIFICATION_CHANNEL_ID = "101016";
         Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        int importance = NotificationManager.IMPORTANCE_LOW;
+        int importance = NotificationManager.IMPORTANCE_HIGH;
         NotificationChannel notificationChannel = null;
         NotificationManager notificationManager;
 
@@ -115,7 +119,7 @@ public class BootReceiver extends BroadcastReceiver {
 
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-            notificationChannel = new NotificationChannel(NOTIFICATION_CHANNEL_ID, "NewApp", importance);
+            notificationChannel = new NotificationChannel(MainActivity.IDCHANNEL, MainActivity.CHANNELNAME, importance);
             notificationChannel.enableLights(true);
             notificationChannel.setLightColor(Color.RED);
             notificationChannel.enableVibration(true);
@@ -127,22 +131,22 @@ public class BootReceiver extends BroadcastReceiver {
                     (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         }
 
-        NotificationCompat.Builder mBuilder =
-                new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
-                        .setAutoCancel(true)
-                        .setSound(alarmSound)
-                        .setSmallIcon(R.drawable.ic_launcher_round)
-                        .setLargeIcon(bipmap)
-                        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-                        .setContentTitle(context.getResources().getString(R.string.app_name))
-                        .setSubText(context.getString(R.string.versiculo_do_dia))
-                        .setContentText(versDoDia.getAssunto() +
-                                " - " + versDoDia.getBooksName() +
-                                " " + versDoDia.getChapter() +
-                                ":" + versDoDia.getVersesNum() + " ");
+        android.app.Notification notification = new NotificationCompat.Builder(context, MainActivity.IDCHANNEL)
+                .setSmallIcon(R.drawable.ic_launcher_round)
+                .setSound(alarmSound)
+                .setContentTitle(context.getString(R.string.app_name))
+                .setSubText(context.getString(R.string.news_has_arrived_notification))
+                .setContentIntent(resultPendingIntent)
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setLargeIcon(bitmap)
+                .setStyle(new NotificationCompat.InboxStyle()
+                        .addLine(list.get(0).getTitle())
+                        .addLine(list.get(1).getTitle())
+                        .addLine(list.get(2).getTitle())
+                        .addLine(list.get(3).getTitle())
+                        .addLine(list.get(4).getTitle())).build();
 
-        mBuilder.setContentIntent(resultPendingIntent);
-        notificationManager.notify(1518, mBuilder.build());
+        notificationManager.notify(1518, notification);
     }
 
     private class myTask extends AsyncTask<String, Void, Boolean> {

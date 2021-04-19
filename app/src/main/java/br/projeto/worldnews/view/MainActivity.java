@@ -64,6 +64,9 @@ import br.projeto.worldnews.util.UtilityMethods;
 
 public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
 
+    public static final String CHANNELNAME = "NewsApp";
+    public static final String CHANNELDESCRIPTION = "NewsApp Notification";
+    public static final String IDCHANNEL = "br.projeto.worldnews.ANDROID";
     public static String url = "https://news.google.com/news?cf=all&hl=language&pz=1&ned=country&q=topic&output=rss";
     private final static String LOCALE_DEFAULT = "en";
     private String[] TOPIC_ARRAY = {"Google News", "Country", "Business", "World", "Finance", "Culture", "Gastronomy",
@@ -488,11 +491,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private void createNotificationChannel() {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "NewsApp";
-            String description = "NewsApp";
+
             int importance = NotificationManager.IMPORTANCE_HIGH;
-            NotificationChannel channel = new NotificationChannel("NewsApp", name, importance);
-            channel.setDescription(description);
+            NotificationChannel channel = new NotificationChannel(IDCHANNEL, CHANNELNAME, importance);
+            channel.setDescription(CHANNELDESCRIPTION);
             NotificationManager notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(channel);
         }
