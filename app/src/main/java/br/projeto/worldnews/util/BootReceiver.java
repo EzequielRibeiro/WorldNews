@@ -133,6 +133,7 @@ public class BootReceiver extends BroadcastReceiver {
 
         android.app.Notification notification = new NotificationCompat.Builder(context, MainActivity.IDCHANNEL)
                 .setSmallIcon(R.drawable.ic_launcher_round)
+                .setAutoCancel(true)
                 .setSound(alarmSound)
                 .setContentTitle(context.getString(R.string.app_name))
                 .setSubText(context.getString(R.string.news_has_arrived_notification))
