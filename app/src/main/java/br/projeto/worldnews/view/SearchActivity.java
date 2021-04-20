@@ -22,6 +22,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import java.util.ArrayList;
 
 import br.projeto.worldnews.R;
+import br.projeto.worldnews.adapter.DBAdapter;
 import br.projeto.worldnews.model.ArticleStructure;
 import br.projeto.worldnews.network.GoogleXmlNews;
 
@@ -84,9 +85,13 @@ public class SearchActivity extends AppCompatActivity {
     private void initViews() {
         mEdtSearch = findViewById(R.id.editText_search);
         mEdtSearch.setTypeface(montserrat_regular);
+        DBAdapter dbAdapter = new DBAdapter(SearchActivity.this);
+        mEdtSearch.setHint(dbAdapter.getMensagemTranslated(10));
         mSwipeRefreshSearch = findViewById(R.id.swipe_refresh_layout_search);
         mRecyclerViewSearch = findViewById(R.id.search_recycler_view);
         mTxvNoResultsFound = findViewById(R.id.tv_no_results);
+        mTxvNoResultsFound.setText(dbAdapter.getMensagemTranslated(2));
+        dbAdapter.close();
         mRecyclerViewSearch.setLayoutManager(new LinearLayoutManager(SearchActivity.this));
     }
 

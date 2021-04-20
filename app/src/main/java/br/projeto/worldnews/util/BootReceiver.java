@@ -114,13 +114,13 @@ public class BootReceiver extends BroadcastReceiver {
             notificationManager =
                     (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
         }
-
+        DBAdapter dbAdapter = new DBAdapter(context);
         android.app.Notification notification = new NotificationCompat.Builder(context, MainActivity.IDCHANNEL)
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setAutoCancel(true)
                 .setSound(alarmSound)
                 .setShowWhen(true)
-                .setContentTitle(context.getString(R.string.news_has_arrived_notification))
+                .setContentTitle(dbAdapter.getMensagemTranslated(7))
                 // .setSubText("")
                 // .setContentText("")
                 .setContentIntent(resultPendingIntent)
@@ -132,7 +132,7 @@ public class BootReceiver extends BroadcastReceiver {
                                 list.get(2).getTitle() + "\n" +
                                 list.get(3).getTitle() + "\n" +
                                 list.get(4).getTitle())).build();
-
+        dbAdapter.close();
         notificationManager.notify(1518, notification);
     }
 

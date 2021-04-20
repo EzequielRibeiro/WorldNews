@@ -31,14 +31,10 @@ import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 import com.google.android.gms.ads.LoadAdError;
 import com.google.android.gms.ads.MobileAds;
-import com.google.android.gms.ads.RequestConfiguration;
 import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
-
-import java.util.Arrays;
-import java.util.List;
 
 import br.projeto.worldnews.R;
 import br.projeto.worldnews.model.Constants;
@@ -62,7 +58,7 @@ public class WebViewActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_web_view);
+        setContentView(R.layout.activity_web);
 
         AssetManager assetManager = this.getApplicationContext().getAssets();
         montserrat_regular = Typeface.createFromAsset(assetManager, "fonts/Montserrat-Regular.ttf");
@@ -89,12 +85,14 @@ public class WebViewActivity extends AppCompatActivity {
             }
         });
         com.amazon.device.ads.AdRegistration.setAppKey(getString(R.string.amazon_ad_unit_id));
-        com.amazon.device.ads.AdRegistration.enableTesting(true);
-
+        // com.amazon.device.ads.AdRegistration.enableTesting(true);
+        /*
         List<String> testDeviceIds = Arrays.asList("DB530A1BBBDBFE8567328113528A19EF", "49EB8CE6C2EA8D132E11FA3F75D28D0B");
         RequestConfiguration configuration =
                 new RequestConfiguration.Builder().setTestDeviceIds(testDeviceIds).build();
         MobileAds.setRequestConfiguration(configuration);
+
+         */
         mAdView = findViewById(R.id.adView);
         AdRequest adRequest = new AdRequest.Builder().build();
         mAdView.loadAd(adRequest);

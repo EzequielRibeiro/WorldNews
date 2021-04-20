@@ -58,13 +58,11 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
 import br.projeto.worldnews.R;
 import br.projeto.worldnews.adapter.DBAdapter;
-import br.projeto.worldnews.model.ArticleStructure;
 import br.projeto.worldnews.model.Constants;
 import br.projeto.worldnews.model.Topic;
 import br.projeto.worldnews.network.GoogleXmlNews;
@@ -77,16 +75,17 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     public static final String CHANNELNAME = "NewsApp";
     public static final String CHANNELDESCRIPTION = "NewsApp Notification";
     public static final String IDCHANNEL = "br.projeto.worldnews.ANDROID";
-    public static String url = "https://news.google.com/news?cf=all&hl=language&pz=1&ned=country&q=topic&output=rss";
+    private final static String[] MENSAGEM_ARRAY = {"Read the full article", "No results were found",
+            "Finalizing adjustments to news topics", "Nothing to display today", "Do you want to exit ?",
+            "The world News in your hands", "You have new News", "No", "Yes", "Search", "About the app"};
     private final static String LOCALE_DEFAULT = "en";
-    private String[] TOPIC_ARRAY = {"Google News", "Country", "World","Businesses", "Finance", "Economy",
+    private String[] TOPIC_ARRAY = {"Google News", "Country", "World", "Businesses", "Finance", "Economy",
             "BitCoin", "Culture", "Gastronomy", "Travels", "Politics", "Science", "Health", "Sports", "Hacker",
             "Technology", "Videogame", "Entertainment", "Films", "Youtube", "Twitch", "Europe", "Asia", "Africa",
             "South America", "North America", "Middle East", "Rate us!", "Contact us", "About the app"};
-
+    public static String url = "https://news.google.com/news?cf=all&hl=language&pz=1&ned=country&q=topic&sort=date&output=rss";
     private String SOURCE;
     private GoogleXmlNews googleXmlNews;
-    private ArrayList<ArticleStructure> articleStructure = new ArrayList<>();
     private SwipeRefreshLayout swipeRefreshLayout;
     private Drawer result;
     private AccountHeader accountHeader;
@@ -133,6 +132,24 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     }
 
+    private void createToolbar() {
+        toolbar = findViewById(R.id.toolbar_main_activity);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+        mTitle = findViewById(R.id.toolbar_title);
+        mTitle.setTypeface(montserrat_regular);
+    }
+
+    private void createRecyclerView() {
+        recyclerView = findViewById(R.id.card_recycler_view);
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
+        swipeRefreshLayout.setOnRefreshListener(this);
+        swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
+        recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -162,7 +179,12 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             for (String t : TOPIC_ARRAY)
                 dbAdapter.insertTopics(t, t);
         }
-        dbAdapter.close();
+
+        if (dbAdapter.getCountMensagem() == 0) {
+            for (String m : MENSAGEM_ARRAY)
+                dbAdapter.insertMensagem(m, m);
+        }
+
         createToolbar();
         createRecyclerView();
         SOURCE = TOPIC_ARRAY[0];
@@ -171,35 +193,21 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
         //translate topics to current language
         if (!locale.getLanguage().equals(LOCALE_DEFAULT)) {
-            new Loading(MainActivity.this).execute();
+            if (!(dbAdapter.getCountTopicsTranslated() == TOPIC_ARRAY.length))
+                new TranslateTopics(MainActivity.this).execute();
+            if (!(dbAdapter.getCountMensagemTranslated() == MENSAGEM_ARRAY.length))
+                new TranslateMensagem(MainActivity.this).execute();
+
         } else {
             onLoadingSwipeRefreshLayout();
             layoutLoading.setVisibility(View.GONE);
             createDrawer(savedInstanceState, toolbar, montserrat_regular);
         }
-
+        dbAdapter.close();
         createNotificationChannel();
         if (!checkAlarmExist())
             setAlarm();
 
-    }
-
-    private void createToolbar() {
-        toolbar = findViewById(R.id.toolbar_main_activity);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayShowTitleEnabled(false);
-        }
-        mTitle = findViewById(R.id.toolbar_title);
-        mTitle.setTypeface(montserrat_regular);
-    }
-
-    private void createRecyclerView() {
-        recyclerView = findViewById(R.id.card_recycler_view);
-        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
-        swipeRefreshLayout.setOnRefreshListener(this);
-        swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
-        recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
     }
 
     private void createDrawer(Bundle savedInstanceState, final Toolbar toolbar, Typeface montserrat_regular) {
@@ -272,7 +280,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
         accountHeader = new AccountHeaderBuilder()
                 .withActivity(this)
-                .withHeaderBackground(R.drawable.ic_back)
+                .withHeaderBackground(R.drawable.ic_back_header)
                 .withSavedInstance(savedInstanceState)
                 .build();
 
@@ -327,7 +335,12 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         String url = this.url.replace("topic", SOURCE);
 
         if (SOURCE.equals("Google News"))
-            url = "https://news.google.com/rss?hl=" + locale.getLanguage() + "&gl=" + countryCode;
+            url = "https://news.google.com/rss?hl=" + locale.getLanguage() + "&sort=date&gl=" + countryCode;
+
+
+        if (googleXmlNews != null)
+            if (googleXmlNews.getStatus() == AsyncTask.Status.RUNNING)
+                googleXmlNews.cancel(true);
 
         googleXmlNews = new GoogleXmlNews(url, MainActivity.this, recyclerView, swipeRefreshLayout);
         googleXmlNews.execute();
@@ -361,7 +374,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        DBAdapter dbAdapter = new DBAdapter(MainActivity.this);
         getMenuInflater().inflate(R.menu.menu_main, menu);
+        menu.findItem(R.id.action_menu).setTitle(dbAdapter.getMensagemTranslated(11));
+        dbAdapter.close();
         return true;
     }
 
@@ -405,23 +421,25 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         if (result.isDrawerOpen()) {
             result.closeDrawer();
         } else {
+            DBAdapter dbAdapter = new DBAdapter(MainActivity.this);
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.MyAlertDialogStyle);
             builder.setTitle(R.string.app_name);
             builder.setIcon(R.mipmap.ic_launcher_round);
-            builder.setMessage("Do you want to Exit?")
+            builder.setMessage(dbAdapter.getMensagemTranslated(5))
                     .setCancelable(false)
-                    .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
+                    .setPositiveButton(dbAdapter.getMensagemTranslated(9), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int id) {
                             finish();
                         }
                     })
-                    .setNegativeButton("No", new DialogInterface.OnClickListener() {
+                    .setNegativeButton(dbAdapter.getMensagemTranslated(8), new DialogInterface.OnClickListener() {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
                             dialog.cancel();
                         }
                     });
+            dbAdapter.close();
             AlertDialog alert = builder.create();
             alert.show();
         }
@@ -460,7 +478,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 MainActivity.this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         alarmMgr.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                SystemClock.elapsedRealtime() + AlarmManager.INTERVAL_FIFTEEN_MINUTES,
+                SystemClock.elapsedRealtime() + AlarmManager.INTERVAL_HOUR * 8,
                 AlarmManager.INTERVAL_HALF_HOUR, alarmIntent);
     }
 
@@ -550,24 +568,25 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         }
     }
 
-    private class Loading extends AsyncTask {
+    private class TranslateTopics extends AsyncTask {
 
-        private DBAdapter dbAdapter = new DBAdapter(getApplicationContext());
-        private Context context;
+        private DBAdapter dbAdapter;
         private Activity activity;
         private AppBarLayout appBarLayout;
 
-        public Loading(Context context) {
-            this.context = context;
+        public TranslateTopics(Context context) {
+            dbAdapter = new DBAdapter(context);
             activity = (Activity) context;
             appBarLayout = findViewById(R.id.appBarLayout);
             appBarLayout.setVisibility(View.GONE);
+            TextView textView = findViewById(R.id.textViewAdjustments);
+            textView.setText(dbAdapter.getMensagemTranslated(3));
         }
 
         @Override
         protected Object doInBackground(Object[] objects) {
             TextView textView = findViewById(R.id.textViewAdjustmentsProgress);
-            topicList = dbAdapter.getAllTopics();
+            List<Topic> topicList = dbAdapter.getAllTopics();
             for (int i = 2; i < topicList.size(); i++) {
                 String topic = topicList.get(i).getTopic();
                 String translate = "";
@@ -602,6 +621,43 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             layoutLoading.setVisibility(View.GONE);
             dbAdapter.close();
             createDrawer(getIntent().getExtras(), toolbar, montserrat_regular);
+
+        }
+    }
+
+    private class TranslateMensagem extends AsyncTask {
+
+        private DBAdapter dbAdapter;
+
+        public TranslateMensagem(Context context) {
+            dbAdapter = new DBAdapter(context);
+        }
+
+        @Override
+        protected Object doInBackground(Object[] objects) {
+
+            List<DBAdapter.Mensagem> mensagemList = dbAdapter.getAllMensagem();
+            for (int i = 0; i < mensagemList.size(); i++) {
+                String mensagem = mensagemList.get(i).getMensagem();
+                String translate = "";
+                if (!mensagemList.get(i).getIsTranlated()) {
+                    translate = translate(LOCALE_DEFAULT, locale.getLanguage(), mensagem);
+
+                    if (translate.length() > 0)
+                        dbAdapter.updateMensagem(mensagemList.get(i).getId(), translate);
+                    else
+                        dbAdapter.updateMensagem(mensagemList.get(i).getId(), mensagem);
+                }
+            }
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Object o) {
+            super.onPostExecute(o);
+            layoutLoading.setVisibility(View.GONE);
+            dbAdapter.close();
 
         }
     }

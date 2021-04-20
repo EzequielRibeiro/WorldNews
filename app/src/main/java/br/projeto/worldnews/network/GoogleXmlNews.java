@@ -333,9 +333,9 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
                         textView.setVisibility(View.VISIBLE);
                         recyclerView.setVisibility(View.GONE);
                     }
-
-                    Toast.makeText(context, "Nothing to display.", Toast.LENGTH_LONG).show();
-
+                    DBAdapter dbAdapter = new DBAdapter(context);
+                    Toast.makeText(context, dbAdapter.getMensagemTranslated(4), Toast.LENGTH_LONG).show();
+                    dbAdapter.close();
 
                 } else {
                     recyclerView.setVisibility(View.VISIBLE);

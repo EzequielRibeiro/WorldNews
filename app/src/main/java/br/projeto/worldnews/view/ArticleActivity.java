@@ -24,6 +24,7 @@ import org.jsoup.nodes.Document;
 import java.io.IOException;
 
 import br.projeto.worldnews.R;
+import br.projeto.worldnews.adapter.DBAdapter;
 import br.projeto.worldnews.model.Constants;
 
 /*
@@ -59,6 +60,11 @@ public class ArticleActivity extends AppCompatActivity {
     private void buttonLinktoFullArticle(Typeface montserrat_regular) {
         Button linkToFullArticle = findViewById(R.id.article_button);
         linkToFullArticle.setTypeface(montserrat_regular);
+
+        DBAdapter dbAdapter = new DBAdapter(ArticleActivity.this);
+        linkToFullArticle.setText(dbAdapter.getMensagemTranslated(1));
+        dbAdapter.close();
+
         linkToFullArticle.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

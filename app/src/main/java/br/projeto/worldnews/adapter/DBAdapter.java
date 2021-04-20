@@ -7,6 +7,7 @@ import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,9 +23,11 @@ public class DBAdapter {
     static final String KEY_TITLES = "title";
     static final String KEY_TRANSLATE = "translate";
     static final String KEY_TRANSLATED = "translated";
+    static final String KEY_MENSAGEM = "mensagem";
     static final String DATABASE_NAME = "newstopics";
     static final String DATABASE_TABLENAME_TITLES = "titles";
     static final String DATABASE_TABLENAME_TOPIC = "topics";
+    static final String DATABASE_TABLENAME_MENSAGEM = "mensagem";
     static final String DATABASE_TABLENAME_MY_TOPIC = "mytopics";
     static final int DATABASE_VERSION = 1;
     static final String DATABASE_CREATE_TOPICS = "CREATE TABLE IF NOT EXISTS " + DATABASE_TABLENAME_TOPIC + "(" +
@@ -36,6 +39,11 @@ public class DBAdapter {
             KEY_ID + " integer primary key autoincrement," +
             KEY_TOPIC + " text not null unique ON CONFLICT ABORT," +
             KEY_ARGS + " text);";
+    static final String DATABASE_CREATE_MENSAGEM = "CREATE TABLE IF NOT EXISTS " + DATABASE_TABLENAME_MENSAGEM + "(" +
+            KEY_ID + " integer primary key autoincrement," +
+            KEY_MENSAGEM + " text not null unique ON CONFLICT ABORT," +
+            KEY_TRANSLATE + " text," +
+            KEY_TRANSLATED + " boolean DEFAULT 0);";
     static final String DATABASE_CREATE_TITLES = "CREATE TABLE IF NOT EXISTS " + DATABASE_TABLENAME_TITLES + "(" +
             KEY_ID + " integer primary key autoincrement," +
             KEY_TITLES + " text not null unique ON CONFLICT ABORT);";
@@ -74,6 +82,27 @@ public class DBAdapter {
 
         return db.delete(DATABASE_TABLENAME_TITLES, null, null) > 0;
 
+    }
+
+    public String getMensagemTranslated(int id) {
+        String value = "ok";
+        Cursor cursor = db.query(DATABASE_TABLENAME_MENSAGEM,
+                new String[]{KEY_TRANSLATE}, KEY_ID + "=?", new String[]{id + ""}, null, null, null);
+
+        if (cursor != null && cursor.moveToFirst()) {
+            value = cursor.getString(cursor.getColumnIndex(KEY_TRANSLATE));
+            cursor.close();
+        }
+
+        return value;
+
+    }
+
+    public long insertMensagem(String mensagem, String translate) throws SQLException {
+        ContentValues initialValues = new ContentValues();
+        initialValues.put(KEY_MENSAGEM, mensagem);
+        initialValues.put(KEY_TRANSLATE, translate);
+        return db.insert(DATABASE_TABLENAME_MENSAGEM, null, initialValues);
     }
 
     public long insertTitle(String titles) throws SQLException {
@@ -185,6 +214,32 @@ public class DBAdapter {
 
     }
 
+    public List<Mensagem> getAllMensagem() throws SQLException {
+
+        List<Mensagem> mensagemList = new ArrayList<>();
+
+        Cursor cursor = db.query(DATABASE_TABLENAME_MENSAGEM,
+                new String[]{"id", KEY_MENSAGEM, KEY_TRANSLATE, KEY_TRANSLATED}, null, null, null, null, "id ASC");
+
+        Mensagem mensagem;
+        if (cursor.moveToFirst()) {
+            do {
+                mensagem = new Mensagem();
+                mensagem.setId(cursor.getInt(0));
+                mensagem.setMensagem(cursor.getString(1));
+                mensagem.setTranslated(cursor.getString(2));
+                if (cursor.getInt(3) == 0)
+                    mensagem.setIsTranlated(false);
+                else
+                    mensagem.setIsTranlated(true);
+                mensagemList.add(mensagem);
+            } while (cursor.moveToNext());
+        }
+        return mensagemList;
+
+    }
+
+
     //retriever all values from database
     public List<Topic> getAllTopics() throws SQLException {
 
@@ -211,6 +266,16 @@ public class DBAdapter {
 
     }
 
+    public boolean updateMensagem(int id, String translate) throws SQLException {
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(KEY_TRANSLATE, translate);
+        contentValues.put(KEY_TRANSLATED, 1);
+
+        return db.update(DATABASE_TABLENAME_MENSAGEM, contentValues, "id=" + id, null) > 0;
+
+    }
+
     public boolean updateTopics(int id, String translate) throws SQLException {
 
         ContentValues contentValues = new ContentValues();
@@ -221,13 +286,26 @@ public class DBAdapter {
 
     }
 
-    public int getCountTranslated(){
+    public int getCountMensagemTranslated() {
         Cursor cursor;
         int count = 0;
 
-        cursor = db.rawQuery("select count("+ KEY_TRANSLATED +") from "+ DATABASE_TABLENAME_TOPIC
-        +" where "+KEY_TRANSLATED+" =1",null);
-        if(cursor.moveToFirst())
+        cursor = db.rawQuery("select count(" + KEY_TRANSLATED + ") from " + DATABASE_TABLENAME_MENSAGEM
+                + " where " + KEY_TRANSLATED + " =1", null);
+        if (cursor.moveToFirst())
+            count = cursor.getInt(0);
+        cursor.close();
+        return count;
+
+    }
+
+    public int getCountTopicsTranslated() {
+        Cursor cursor;
+        int count = 0;
+
+        cursor = db.rawQuery("select count(" + KEY_TRANSLATED + ") from " + DATABASE_TABLENAME_TOPIC
+                + " where " + KEY_TRANSLATED + " =1", null);
+        if (cursor.moveToFirst())
             count = cursor.getInt(0);
         cursor.close();
 
@@ -239,8 +317,22 @@ public class DBAdapter {
         Cursor cursor;
         int count = 0;
 
-        cursor = db.rawQuery("select count("+ KEY_TOPIC +") from "+ DATABASE_TABLENAME_TOPIC,null);
-        if(cursor.moveToFirst())
+        cursor = db.rawQuery("select count(" + KEY_TOPIC + ") from " + DATABASE_TABLENAME_TOPIC, null);
+        if (cursor.moveToFirst())
+            count = cursor.getInt(0);
+        cursor.close();
+
+        return count;
+
+
+    }
+
+    public int getCountMensagem() {
+        Cursor cursor;
+        int count = 0;
+
+        cursor = db.rawQuery("select count(" + KEY_MENSAGEM + ") from " + DATABASE_TABLENAME_MENSAGEM, null);
+        if (cursor.moveToFirst())
             count = cursor.getInt(0);
         cursor.close();
 
@@ -263,6 +355,7 @@ public class DBAdapter {
                 sqLiteDatabase.execSQL(DATABASE_CREATE_TOPICS);
                 sqLiteDatabase.execSQL(DATABASE_CREATE_MY_TOPICS);
                 sqLiteDatabase.execSQL(DATABASE_CREATE_TITLES);
+                sqLiteDatabase.execSQL(DATABASE_CREATE_MENSAGEM);
             } catch (SQLException e) {
                 e.printStackTrace();
             }
@@ -274,6 +367,47 @@ public class DBAdapter {
             sqLiteDatabase.execSQL("DROP TABLE IF EXISTS " + DATABASE_TABLENAME_TOPIC);
             onCreate(sqLiteDatabase);
         }
+
+    }
+
+    public class Mensagem {
+        int id;
+        String mensagem;
+        String translated;
+        boolean isTranlated;
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public String getMensagem() {
+            return mensagem;
+        }
+
+        public void setMensagem(String mensagem) {
+            this.mensagem = mensagem;
+        }
+
+        public String getTranslated() {
+            return translated;
+        }
+
+        public void setTranslated(String translated) {
+            this.translated = translated;
+        }
+
+        public boolean getIsTranlated() {
+            return isTranlated;
+        }
+
+        public void setIsTranlated(boolean isTranlated) {
+            this.isTranlated = isTranlated;
+        }
+
 
     }
 
