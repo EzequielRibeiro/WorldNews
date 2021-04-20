@@ -221,6 +221,20 @@ public class DBAdapter {
 
     }
 
+    public int getCountTranslated(){
+        Cursor cursor;
+        int count = 0;
+
+        cursor = db.rawQuery("select count("+ KEY_TRANSLATED +") from "+ DATABASE_TABLENAME_TOPIC
+        +" where "+KEY_TRANSLATED+" =1",null);
+        if(cursor.moveToFirst())
+            count = cursor.getInt(0);
+        cursor.close();
+
+        return count;
+
+
+    }
     public int getCountTopics(){
         Cursor cursor;
         int count = 0;
