@@ -79,7 +79,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     public static final String IDCHANNEL = "br.projeto.worldnews.ANDROID";
     public static String url = "https://news.google.com/news?cf=all&hl=language&pz=1&ned=country&q=topic&output=rss";
     private final static String LOCALE_DEFAULT = "en";
-    private String[] TOPIC_ARRAY = {"Google News", "Country", "World", "Business", "Finance", "Economy",
+    private String[] TOPIC_ARRAY = {"Google News", "Country", "World","Businesses", "Finance", "Economy",
             "BitCoin", "Culture", "Gastronomy", "Travels", "Politics", "Science", "Health", "Sports", "Hacker",
             "Technology", "Videogame", "Entertainment", "Films", "Youtube", "Twitch", "Europe", "Asia", "Africa",
             "South America", "North America", "Middle East", "Rate us!", "Contact us", "About the app"};
