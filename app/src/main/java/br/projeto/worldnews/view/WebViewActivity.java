@@ -5,6 +5,7 @@ import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -13,11 +14,31 @@ import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+
+import com.amazon.device.ads.Ad;
+import com.amazon.device.ads.AdError;
+import com.amazon.device.ads.AdProperties;
+import com.amazon.device.ads.DefaultAdListener;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.RequestConfiguration;
+import com.google.android.gms.ads.initialization.InitializationStatus;
+import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
+import com.google.android.gms.ads.interstitial.InterstitialAd;
+import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+
+import java.util.Arrays;
+import java.util.List;
 
 import br.projeto.worldnews.R;
 import br.projeto.worldnews.model.Constants;
@@ -31,6 +52,12 @@ public class WebViewActivity extends AppCompatActivity {
     private TextView mTitle;
     private Typeface montserrat_regular;
     private float m_downX;
+    private LinearLayout adContainer;
+    private AdView mAdView;
+    private com.amazon.device.ads.AdLayout amazonAdView;
+    private com.google.android.gms.ads.AdView admobAdView;
+    private com.amazon.device.ads.InterstitialAd interstitialAdAmazon;
+    private InterstitialAd mInterstitialAd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,10 +70,10 @@ public class WebViewActivity extends AppCompatActivity {
         url = getIntent().getStringExtra(Constants.INTENT_URL);
 
         /*
-        ** Custom Toolbar ( App Bar )
-        **/
+         ** Custom Toolbar ( App Bar )
+         **/
         createToolbar();
-
+        adContainer = findViewById(R.id.containerAd);
         webView = findViewById(R.id.webView_article);
         progressBar = findViewById(R.id.progressBar);
 
@@ -54,6 +81,139 @@ public class WebViewActivity extends AppCompatActivity {
             webView.loadUrl(url);
             initWebView();
         }
+
+        MobileAds.initialize(this, new OnInitializationCompleteListener() {
+            @Override
+            public void onInitializationComplete(
+                    InitializationStatus initializationStatus) {
+            }
+        });
+        com.amazon.device.ads.AdRegistration.setAppKey(getString(R.string.amazon_ad_unit_id));
+        com.amazon.device.ads.AdRegistration.enableTesting(true);
+
+        List<String> testDeviceIds = Arrays.asList("DB530A1BBBDBFE8567328113528A19EF", "49EB8CE6C2EA8D132E11FA3F75D28D0B");
+        RequestConfiguration configuration =
+                new RequestConfiguration.Builder().setTestDeviceIds(testDeviceIds).build();
+        MobileAds.setRequestConfiguration(configuration);
+        mAdView = findViewById(R.id.adView);
+        AdRequest adRequest = new AdRequest.Builder().build();
+        mAdView.loadAd(adRequest);
+        loadInterstitialAd(adRequest);
+        adListner();
+
+    }
+
+    private void adListner() {
+
+        mAdView.setAdListener(new AdListener() {
+            @Override
+            public void onAdLoaded() {
+
+            }
+
+            @Override
+            public void onAdFailedToLoad(LoadAdError adError) {
+                Log.i("AdMob", "banner fail code " + adError.getCode() + ": " + adError.getMessage());
+                loadAdAmazon();
+            }
+
+            @Override
+            public void onAdOpened() {
+                // Code to be executed when an ad opens an overlay that
+                // covers the screen.
+            }
+
+            @Override
+            public void onAdClicked() {
+                // Code to be executed when the user clicks on an ad.
+            }
+
+            @Override
+            public void onAdClosed() {
+                // Code to be executed when the user is about to return
+                // to the app after tapping on an ad.
+            }
+        });
+    }
+
+    private void loadInterstitialAd(AdRequest adRequest) {
+        InterstitialAd.load(this, getString(R.string.intersticial_unit_id), adRequest, new InterstitialAdLoadCallback() {
+            @Override
+            public void onAdLoaded(@NonNull InterstitialAd interstitialAd) {
+                // The mInterstitialAd reference will be null until
+                // an ad is loaded.
+                mInterstitialAd = interstitialAd;
+
+            }
+
+            @Override
+            public void onAdFailedToLoad(@NonNull LoadAdError loadAdError) {
+                // Handle the error
+                Log.i("Admob", "Interstitial fail code " + loadAdError.getCode() + ": " + loadAdError.getMessage());
+                loadAdAmazonInterstitial();
+            }
+        });
+
+    }
+
+    private void loadAdAmazonInterstitial() {
+        interstitialAdAmazon = new com.amazon.device.ads.InterstitialAd(WebViewActivity.this);
+        interstitialAdAmazon.loadAd();
+
+        interstitialAdAmazon.setListener(new DefaultAdListener() {
+            @Override
+            public void onAdLoaded(Ad ad, AdProperties adProperties) {
+            }
+
+            @Override
+            public void onAdFailedToLoad(Ad ad, com.amazon.device.ads.AdError error) {
+                super.onAdFailedToLoad(ad, error);
+                Log.i("AdAmazon", "Interstitial fail code " + error.getCode() + ": " + error.getMessage());
+            }
+
+        });
+
+
+    }
+
+    private void loadAdAmazon() {
+        adContainer.removeView(mAdView);
+        amazonAdView = new com.amazon.device.ads.AdLayout(this, com.amazon.device.ads.AdSize.SIZE_320x50);
+        admobAdView = new com.google.android.gms.ads.AdView(this);
+        admobAdView.setAdSize(com.google.android.gms.ads.AdSize.BANNER);
+        admobAdView.setAdUnitId(getString(R.string.amazon_ad_unit_id));
+        adContainer.addView(amazonAdView);
+        amazonAdView.loadAd(new com.amazon.device.ads.AdTargetingOptions());
+
+        amazonAdView.setListener(new com.amazon.device.ads.AdListener() {
+            @Override
+            public void onAdLoaded(Ad ad, AdProperties adProperties) {
+
+            }
+
+            @Override
+            public void onAdFailedToLoad(Ad ad, AdError adError) {
+                adContainer.removeView(amazonAdView);
+                Log.i("AdAmazon", "banner fail code " + adError.getCode() + ": " + adError.getMessage());
+            }
+
+            @Override
+            public void onAdExpanded(Ad ad) {
+
+            }
+
+            @Override
+            public void onAdCollapsed(Ad ad) {
+
+            }
+
+            @Override
+            public void onAdDismissed(Ad ad) {
+
+            }
+        });
+
+
     }
 
     private void createToolbar() {
@@ -172,6 +332,12 @@ public class WebViewActivity extends AppCompatActivity {
     public void onBackPressed() {
         super.onBackPressed();
         overridePendingTransition(R.anim.pull_in_left, R.anim.push_out_right);
+        if (mInterstitialAd != null) {
+            mInterstitialAd.show(WebViewActivity.this);
+        } else {
+            if (interstitialAdAmazon != null)
+                interstitialAdAmazon.showAd();
+        }
     }
 
     private class MyWebChromeClient extends WebChromeClient {

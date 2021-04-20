@@ -1,10 +1,13 @@
 package br.projeto.worldnews.view;
 
+
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -17,28 +20,35 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.os.StrictMode;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import com.google.android.material.appbar.AppBarLayout;
+import com.google.android.play.core.review.ReviewInfo;
+import com.google.android.play.core.review.ReviewManager;
+import com.google.android.play.core.review.ReviewManagerFactory;
+import com.google.android.play.core.tasks.OnFailureListener;
+import com.google.firebase.analytics.FirebaseAnalytics;
 import com.mikepenz.materialdrawer.AccountHeader;
 import com.mikepenz.materialdrawer.AccountHeaderBuilder;
 import com.mikepenz.materialdrawer.Drawer;
 import com.mikepenz.materialdrawer.Drawer.OnDrawerItemClickListener;
 import com.mikepenz.materialdrawer.DrawerBuilder;
+import com.mikepenz.materialdrawer.model.DividerDrawerItem;
 import com.mikepenz.materialdrawer.model.PrimaryDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
-import com.mikepenz.materialdrawer.model.interfaces.Nameable;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -69,10 +79,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     public static final String IDCHANNEL = "br.projeto.worldnews.ANDROID";
     public static String url = "https://news.google.com/news?cf=all&hl=language&pz=1&ned=country&q=topic&output=rss";
     private final static String LOCALE_DEFAULT = "en";
-    private String[] TOPIC_ARRAY = {"Google News", "Country", "Business", "World", "Finance", "Culture", "Gastronomy",
-            "Youtube", "Twitch", "Hacker", "Politics", "Science", "Technology", "Economy", "Entertainment",
-            "Sports", "Health", "Videogame", "BitCoin", "Films", "Travels", "Europe", "South America",
-            "North America", "Asia", "Africa", "Middle East", "Oceania", "Rate us!", "Contact us", "About the app"};
+    private String[] TOPIC_ARRAY = {"Google News", "Country", "World", "Business", "Finance", "Economy",
+            "BitCoin", "Culture", "Gastronomy", "Travels", "Politics", "Science", "Health", "Sports", "Hacker",
+            "Technology", "Videogame", "Entertainment", "Films", "Youtube", "Twitch", "Europe", "Asia", "Africa",
+            "South America", "North America", "Middle East", "Rate us!", "Contact us", "About the app"};
 
     private String SOURCE;
     private GoogleXmlNews googleXmlNews;
@@ -88,9 +98,40 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private Locale locale;
     private List<Topic> topicList;
     private String countryCode;
-    private LinearLayout linearLayoutLoading;
+    private ConstraintLayout layoutLoading;
+    private FirebaseAnalytics mFirebaseAnalytics;
 
+    private static String translate(String langFrom, String langTo, String text) {
 
+        final String yourURL = "https://script.google.com/macros/s/AKfycbyHrs_kLCmXJB-fH_mS2ODtud3y0lR4Povq9nE2EqCSBPSiqjF80PNMKJohEV3TrZws/exec";
+
+        try {
+
+            String urlStr = yourURL + "?q=" + URLEncoder.encode(text, "UTF-8") + "&target=" + langTo + "&source="
+                    + langFrom;
+
+            URL url = new URL(urlStr);
+            StringBuilder response = new StringBuilder();
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestProperty("User-Agent", "Mozilla/5.0");
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            String inputLine;
+            while ((inputLine = in.readLine()) != null) {
+                response.append(inputLine);
+            }
+            in.close();
+
+            return response.toString();
+
+        } catch (UnsupportedEncodingException | MalformedURLException e) {
+            e.printStackTrace();
+            return "";
+        } catch (IOException ioException) {
+            ioException.printStackTrace();
+            return "";
+        }
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -98,8 +139,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         setContentView(R.layout.activity_main);
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
-
-        linearLayoutLoading = findViewById(R.id.linearLayoutLoading);
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        layoutLoading = findViewById(R.id.layoutLoading);
 
         locale = getResources().getConfiguration().locale;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -126,51 +167,20 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         createRecyclerView();
         SOURCE = TOPIC_ARRAY[0];
         mTitle.setText(getString(R.string.toolbar_default_text) + " " + locale.getDisplayCountry());
-
+        getSharedPreferences("topics", MODE_PRIVATE).edit().putString("topic", getString(R.string.toolbar_default_text) + " " + locale.getDisplayCountry()).apply();
 
         //translate topics to current language
         if (!locale.getLanguage().equals(LOCALE_DEFAULT)) {
-            new Loading().execute();
+            new Loading(MainActivity.this).execute();
         } else {
             onLoadingSwipeRefreshLayout();
-            linearLayoutLoading.setVisibility(View.GONE);
+            layoutLoading.setVisibility(View.GONE);
             createDrawer(savedInstanceState, toolbar, montserrat_regular);
         }
 
         createNotificationChannel();
         if (!checkAlarmExist())
             setAlarm();
-
-    }
-
-    private static String translate(String langFrom, String langTo, String text) {
-
-        final String yourURL = "https://script.google.com/macros/s/AKfycbyHrs_kLCmXJB-fH_mS2ODtud3y0lR4Povq9nE2EqCSBPSiqjF80PNMKJohEV3TrZws/exec";
-
-        try {
-
-            String urlStr = yourURL + "?q=" + URLEncoder.encode(text, "UTF-8") + "&target=" + langTo + "&source="
-                    + langFrom;
-
-            URL url = new URL(urlStr);
-            StringBuilder response = new StringBuilder();
-            HttpURLConnection con = (HttpURLConnection) url.openConnection();
-            con.setRequestProperty("User-Agent", "Mozilla/5.0");
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
-            }
-            in.close();
-            return response.toString();
-
-        } catch (UnsupportedEncodingException | MalformedURLException e) {
-            e.printStackTrace();
-            return "";
-        } catch (IOException ioException) {
-            ioException.printStackTrace();
-            return "";
-        }
 
     }
 
@@ -192,7 +202,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
     }
 
-
     private void createDrawer(Bundle savedInstanceState, final Toolbar toolbar, Typeface montserrat_regular) {
 
 
@@ -203,66 +212,63 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         PrimaryDrawerItem item0 = new PrimaryDrawerItem().withIdentifier(0).withName(topicList.get(0).getTopicTranslate())
                 .withIcon(R.drawable.ic_googlenews).withTypeface(montserrat_regular);
         PrimaryDrawerItem item1 = new PrimaryDrawerItem().withIdentifier(1).withName(topicList.get(1).getTopicTranslate())
-                .withIcon(R.drawable.ic_googlenews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_country).withTypeface(montserrat_regular);
         PrimaryDrawerItem item2 = new PrimaryDrawerItem().withIdentifier(2).withName(topicList.get(2).getTopicTranslate())
-                .withIcon(R.drawable.ic_bbcnews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
         PrimaryDrawerItem item3 = new PrimaryDrawerItem().withIdentifier(3).withName(topicList.get(3).getTopicTranslate())
-                .withIcon(R.drawable.ic_thehindu).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_business).withTypeface(montserrat_regular);
         PrimaryDrawerItem item4 = new PrimaryDrawerItem().withIdentifier(4).withName(topicList.get(4).getTopicTranslate())
-                .withIcon(R.drawable.ic_timesofindia).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_finance).withTypeface(montserrat_regular);
         PrimaryDrawerItem item5 = new PrimaryDrawerItem().withIdentifier(5).withName(topicList.get(5).getTopicTranslate())
-                .withIcon(R.drawable.ic_googlenews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_economy).withTypeface(montserrat_regular);
         PrimaryDrawerItem item6 = new PrimaryDrawerItem().withIdentifier(6).withName(topicList.get(6).getTopicTranslate())
-                .withIcon(R.drawable.ic_buzzfeednews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_bitcoin).withTypeface(montserrat_regular);
         PrimaryDrawerItem item7 = new PrimaryDrawerItem().withIdentifier(7).withName(topicList.get(7).getTopicTranslate())
-                .withIcon(R.drawable.ic_mashablenews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_culture).withTypeface(montserrat_regular);
         PrimaryDrawerItem item8 = new PrimaryDrawerItem().withIdentifier(8).withName(topicList.get(8).getTopicTranslate())
-                .withIcon(R.drawable.ic_mtvnews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_gastronomy).withTypeface(montserrat_regular);
         PrimaryDrawerItem item9 = new PrimaryDrawerItem().withIdentifier(9).withName(topicList.get(9).getTopicTranslate())
-                .withIcon(R.drawable.ic_googlenews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_travels).withTypeface(montserrat_regular);
         PrimaryDrawerItem item10 = new PrimaryDrawerItem().withIdentifier(10).withName(topicList.get(10).getTopicTranslate())
-                .withIcon(R.drawable.ic_bbcsports).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_politic).withTypeface(montserrat_regular);
         PrimaryDrawerItem item11 = new PrimaryDrawerItem().withIdentifier(11).withName(topicList.get(11).getTopicTranslate())
-                .withIcon(R.drawable.ic_espncricinfo).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_cience).withTypeface(montserrat_regular);
         PrimaryDrawerItem item12 = new PrimaryDrawerItem().withIdentifier(12).withName(topicList.get(12).getTopicTranslate())
-                .withIcon(R.drawable.ic_talksport).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_health).withTypeface(montserrat_regular);
         PrimaryDrawerItem item13 = new PrimaryDrawerItem().withIdentifier(13).withName(topicList.get(13).getTopicTranslate())
-                .withIcon(R.drawable.ic_googlenews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_sport).withTypeface(montserrat_regular);
         PrimaryDrawerItem item14 = new PrimaryDrawerItem().withIdentifier(14).withName(topicList.get(14).getTopicTranslate())
-                .withIcon(R.drawable.ic_medicalnewstoday).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_hacker).withTypeface(montserrat_regular);
         PrimaryDrawerItem item15 = new PrimaryDrawerItem().withIdentifier(15).withName(topicList.get(15).getTopicTranslate())
-                .withIcon(R.drawable.ic_nationalgeographic).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_tecnology).withTypeface(montserrat_regular);
         PrimaryDrawerItem item16 = new PrimaryDrawerItem().withIdentifier(16).withName(topicList.get(16).getTopicTranslate())
-                .withIcon(R.drawable.ic_googlenews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_gamer).withTypeface(montserrat_regular);
         PrimaryDrawerItem item17 = new PrimaryDrawerItem().withIdentifier(17).withName(topicList.get(17).getTopicTranslate())
-                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_entretenimento).withTypeface(montserrat_regular);
         PrimaryDrawerItem item18 = new PrimaryDrawerItem().withIdentifier(18).withName(topicList.get(18).getTopicTranslate())
-                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_movie).withTypeface(montserrat_regular);
         PrimaryDrawerItem item19 = new PrimaryDrawerItem().withIdentifier(19).withName(topicList.get(19).getTopicTranslate())
-                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_youtube).withTypeface(montserrat_regular);
         PrimaryDrawerItem item20 = new PrimaryDrawerItem().withIdentifier(20).withName(topicList.get(20).getTopicTranslate())
-                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_twitch).withTypeface(montserrat_regular);
         PrimaryDrawerItem item21 = new PrimaryDrawerItem().withIdentifier(21).withName(topicList.get(21).getTopicTranslate())
-                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_europe).withTypeface(montserrat_regular);
         PrimaryDrawerItem item22 = new PrimaryDrawerItem().withIdentifier(22).withName(topicList.get(22).getTopicTranslate())
-                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
         PrimaryDrawerItem item23 = new PrimaryDrawerItem().withIdentifier(23).withName(topicList.get(23).getTopicTranslate())
-                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
         PrimaryDrawerItem item24 = new PrimaryDrawerItem().withIdentifier(24).withName(topicList.get(24).getTopicTranslate())
-                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
         PrimaryDrawerItem item25 = new PrimaryDrawerItem().withIdentifier(25).withName(topicList.get(25).getTopicTranslate())
-                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
         PrimaryDrawerItem item26 = new PrimaryDrawerItem().withIdentifier(26).withName(topicList.get(26).getTopicTranslate())
-                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
         PrimaryDrawerItem item27 = new PrimaryDrawerItem().withIdentifier(27).withName(topicList.get(27).getTopicTranslate())
-                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_like_us).withTypeface(montserrat_regular);
         PrimaryDrawerItem item28 = new PrimaryDrawerItem().withIdentifier(28).withName(topicList.get(28).getTopicTranslate())
-                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_mail).withTypeface(montserrat_regular);
         PrimaryDrawerItem item29 = new PrimaryDrawerItem().withIdentifier(29).withName(topicList.get(29).getTopicTranslate())
-                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item30 = new PrimaryDrawerItem().withIdentifier(30).withName(topicList.get(30).getTopicTranslate())
-                .withIcon(R.drawable.ic_ccnnews).withTypeface(montserrat_regular);
-
+                .withIcon(R.drawable.ic_about).withTypeface(montserrat_regular);
 
         accountHeader = new AccountHeaderBuilder()
                 .withActivity(this)
@@ -275,34 +281,35 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 .withActivity(this)
                 .withToolbar(toolbar)
                 .withSelectedItem(0)
-                .addDrawerItems(item0, item1, item2, item3, item4, item5, item6, item7, item8, item9,
-                        item10, item11, item12, item13, item14, item15, item16, item17, item18, item19, item20,
-                        item21, item22, item23, item24, item25, item26, item27, item28, item29, item30)
+                .addDrawerItems(
+                        item0, item1, item2,
+                        new DividerDrawerItem(), item3, item4, item5, item6,
+                        new DividerDrawerItem(), item7, item8, item9,
+                        new DividerDrawerItem(), item10, item11, item12, item13,
+                        new DividerDrawerItem(), item14, item15, item16,
+                        new DividerDrawerItem(), item17, item18, item19, item20,
+                        new DividerDrawerItem(), item21, item22, item23, item24, item25, item26,
+                        new DividerDrawerItem(), item27, item28, item29)
                 .withOnDrawerItemClickListener(new OnDrawerItemClickListener() {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
 
-                        int selected = (int) (long) position - 1;
+                        switch ((int) drawerItem.getIdentifier()) {
 
-                        if (selected <= 27) {
-                            SOURCE = topicList.get(selected).getTopicTranslate();
-                            mTitle.setText(((Nameable) drawerItem).getName().getText(MainActivity.this));
-                            onLoadingSwipeRefreshLayout();
-                        }
-
-                        switch (selected) {
-
-                            case 28:
-                                Toast.makeText(MainActivity.this, "rate us!", Toast.LENGTH_LONG).show();
+                            case 27:
+                                rateApp();
                                 break;
-
-                            case 29:
+                            case 28:
                                 sendEmail();
                                 break;
-                            case 30:
+                            case 29:
                                 openAboutActivity();
                                 break;
                             default:
+                                SOURCE = topicList.get((int) drawerItem.getIdentifier()).getTopicTranslate();
+                                getSharedPreferences("topics", MODE_PRIVATE).edit().putString("topic", SOURCE).apply();
+                                //  mTitle.setText(((Nameable) drawerItem).getName().getText(MainActivity.this));
+                                onLoadingSwipeRefreshLayout();
                                 break;
                         }
                         return false;
@@ -387,9 +394,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     }
 
     private void sendEmail() {
-        Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
+        /*Intent emailIntent = new Intent(Intent.ACTION_SENDTO);
         emailIntent.setData(Uri.parse("mailto: aplicativoparamobile@gmail.com"));
-        startActivity(Intent.createChooser(emailIntent, "Send feedback"));
+        startActivity(Intent.createChooser(emailIntent, "Send feedback"));*/
+        Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://ezequielportfolio.wordpress.com/contato/"));
+        startActivity(browserIntent);
     }
 
     public void onBackPressed() {
@@ -398,7 +407,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         } else {
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.MyAlertDialogStyle);
             builder.setTitle(R.string.app_name);
-            builder.setIcon(R.drawable.ic_launcher_round);
+            builder.setIcon(R.mipmap.ic_launcher_round);
             builder.setMessage("Do you want to Exit?")
                     .setCancelable(false)
                     .setPositiveButton("Yes", new DialogInterface.OnClickListener() {
@@ -471,6 +480,47 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     }
 
+    private void rateApp() {
+        final ReviewManager reviewManager = ReviewManagerFactory.create(MainActivity.this);
+        //reviewManager = new FakeReviewManager(this);
+        com.google.android.play.core.tasks.Task<ReviewInfo> request = reviewManager.requestReviewFlow();
+
+        request.addOnCompleteListener(new com.google.android.play.core.tasks.OnCompleteListener<ReviewInfo>() {
+            @Override
+            public void onComplete(com.google.android.play.core.tasks.Task<ReviewInfo> task) {
+                if (task.isSuccessful()) {
+                    ReviewInfo reviewInfo = task.getResult();
+                    com.google.android.play.core.tasks.Task<Void> flow = reviewManager.launchReviewFlow(MainActivity.this, reviewInfo);
+                    flow.addOnCompleteListener(new com.google.android.play.core.tasks.OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(com.google.android.play.core.tasks.Task<Void> task) {
+                            Log.e("Rate Flow", "Complete");
+                        }
+                    });
+
+                    flow.addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(Exception e) {
+                            Log.e("Rate Flow", "Fail");
+                            e.printStackTrace();
+                        }
+                    });
+
+                } else {
+                    Log.e("Rate Task", "Fail");
+                }
+            }
+
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(Exception e) {
+                e.printStackTrace();
+                Log.e("Rate Request", "Fail");
+            }
+        });
+
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -502,11 +552,21 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private class Loading extends AsyncTask {
 
-        DBAdapter dbAdapter = new DBAdapter(getApplicationContext());
+        private DBAdapter dbAdapter = new DBAdapter(getApplicationContext());
+        private Context context;
+        private Activity activity;
+        private AppBarLayout appBarLayout;
+
+        public Loading(Context context) {
+            this.context = context;
+            activity = (Activity) context;
+            appBarLayout = findViewById(R.id.appBarLayout);
+            appBarLayout.setVisibility(View.GONE);
+        }
 
         @Override
         protected Object doInBackground(Object[] objects) {
-
+            TextView textView = findViewById(R.id.textViewAdjustmentsProgress);
             topicList = dbAdapter.getAllTopics();
             for (int i = 2; i < topicList.size(); i++) {
                 String topic = topicList.get(i).getTopic();
@@ -514,6 +574,16 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 if (!topicList.get(i).isTranslated() && (!topicList.get(i).getTopic().contains("Youtube")
                         && !topicList.get(i).getTopic().contains("Twitch"))) {
                     translate = translate(LOCALE_DEFAULT, locale.getLanguage(), topic);
+
+                    int finalI = i;
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            textView.setText(finalI + "/" + topicList.size());
+                        }
+                    });
+
+
                     if (translate.length() > 0)
                         dbAdapter.updateTopics(topicList.get(i).getId(), translate);
                 }
@@ -526,7 +596,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         protected void onPostExecute(Object o) {
             super.onPostExecute(o);
             onLoadingSwipeRefreshLayout();
-            linearLayoutLoading.setVisibility(View.GONE);
+            appBarLayout.setVisibility(View.VISIBLE);
+            layoutLoading.setVisibility(View.GONE);
             dbAdapter.close();
             createDrawer(getIntent().getExtras(), toolbar, montserrat_regular);
 

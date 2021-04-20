@@ -1,6 +1,7 @@
 package br.projeto.worldnews.network;
 
 import android.app.Activity;
+import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
@@ -30,6 +31,7 @@ import br.projeto.worldnews.adapter.DataAdapterArticle;
 import br.projeto.worldnews.model.Article;
 import br.projeto.worldnews.network.interceptors.OfflineResponseCacheInterceptor;
 import br.projeto.worldnews.network.interceptors.ResponseCacheInterceptor;
+import br.projeto.worldnews.view.MainActivity;
 import br.projeto.worldnews.view.SearchActivity;
 import okhttp3.Cache;
 import okhttp3.OkHttpClient;
@@ -315,28 +317,40 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
     protected void onPostExecute(String result) {
         super.onPostExecute(result);
 
-        adapter = new DataAdapterArticle(context, list);
-        recyclerView.setAdapter(adapter);
+
 
         context.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 TextView textView = context.findViewById(R.id.tv_no_results);
+                TextView toolbar_title = context.findViewById(R.id.toolbar_title);
 
                 if (list.isEmpty()) {
                     swipeRefreshLayout.setRefreshing(false);
                     swipeRefreshLayout.setEnabled(false);
-                    recyclerView.setVisibility(View.GONE);
-                    if (context instanceof SearchActivity)
+
+                    if (context instanceof SearchActivity) {
                         textView.setVisibility(View.VISIBLE);
+                        recyclerView.setVisibility(View.GONE);
+                    }
+
+                    Toast.makeText(context, "Nothing to display.", Toast.LENGTH_LONG).show();
+
 
                 } else {
                     recyclerView.setVisibility(View.VISIBLE);
                     swipeRefreshLayout.setRefreshing(false);
                     swipeRefreshLayout.setEnabled(false);
+                    adapter = new DataAdapterArticle(context, list);
+                    recyclerView.setAdapter(adapter);
 
                     if (context instanceof SearchActivity)
                         textView.setVisibility(View.GONE);
+
+                    if (context instanceof MainActivity) {
+                        String title = context.getSharedPreferences("topics", Context.MODE_PRIVATE).getString("topic", "News");
+                        toolbar_title.setText(title);
+                    }
                 }
             }
         });

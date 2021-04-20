@@ -23,28 +23,46 @@
 
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
-    <LinearLayout
-        android:id="@+id/linearLayoutLoading"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutLoading"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="@color/colorPrimary"
         android:gravity="center"
-        android:orientation="vertical"
         android:visibility="visible">
 
         <ProgressBar
             android:id="@+id/progressBar2"
             style="@android:style/Widget.ProgressBar.Large"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintBottom_toTopOf="@+id/textViewAdjustments"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_chainStyle="packed" />
 
         <TextView
-            android:id="@+id/textView"
-            android:layout_width="match_parent"
+            android:id="@+id/textViewAdjustments"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="5dp"
             android:gravity="center"
-            android:text="Finishing adjustments ..." />
-    </LinearLayout>
+            android:text="Finishing adjustments"
+            app:layout_constraintBottom_toTopOf="@+id/textViewAdjustmentsProgress"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/progressBar2" />
+
+        <TextView
+            android:id="@+id/textViewAdjustmentsProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textViewAdjustments" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
 </FrameLayout>

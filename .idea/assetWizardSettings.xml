@@ -68,6 +68,7 @@
                                           <PersistentState>
                                             <option name="values">
                                               <map>
+                                                <entry key="imagePath" value="D:\Projeto-Android\WorldNews\app\src\main\ic_launcher-playstore.png" />
                                                 <entry key="scalingPercent" value="103" />
                                                 <entry key="trimmed" value="true" />
                                               </map>
@@ -92,9 +93,8 @@
                                             <option name="values">
                                               <map>
                                                 <entry key="color" value="000000" />
-                                                <entry key="imagePath" value="D:\Projeto-Android\WorldNews\app\src\main\res\drawable\ic_launcher.png" />
-                                                <entry key="scalingPercent" value="116" />
-                                                <entry key="trimmed" value="true" />
+                                                <entry key="imagePath" value="D:\Projeto-Android\WorldNews\ic_launcher.png" />
+                                                <entry key="scalingPercent" value="60" />
                                               </map>
                                             </option>
                                           </PersistentState>
@@ -126,7 +126,8 @@
                                   </option>
                                   <option name="values">
                                     <map>
-                                      <entry key="previewDensity" value="HIGH" />
+                                      <entry key="backgroundAssetType" value="COLOR" />
+                                      <entry key="backgroundColor" value="2d71ee" />
                                     </map>
                                   </option>
                                 </PersistentState>
@@ -332,11 +333,6 @@
                                           </PersistentState>
                                         </value>
                                       </entry>
-                                    </map>
-                                  </option>
-                                  <option name="values">
-                                    <map>
-                                      <entry key="previewDensity" value="HIGH" />
                                     </map>
                                   </option>
                                 </PersistentState>

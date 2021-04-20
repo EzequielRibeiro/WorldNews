@@ -65,6 +65,8 @@ dependencies {
     implementation 'androidx.cardview:cardview:1.0.0'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'org.jsoup:jsoup:1.13.1'
+    implementation 'com.google.firebase:firebase-ads:20.0.0'
+    implementation 'com.google.android.play:core:1.10.0'
 
     //implementation 'com.amazon.android:mobile-ads:6.0.0'
     //noinspection GradleDynamicVersion

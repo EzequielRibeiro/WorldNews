@@ -64,7 +64,7 @@ public class DataAdapter extends RecyclerView.Adapter<DataAdapter.ViewHolder> {
                 .load(articles.get(position).getUrlToImage())
                 .thumbnail(0.1f)
                 .centerCrop()
-                .error(R.drawable.ic_placeholder)
+                .error(R.drawable.default_news_image)
                 .into(holder.img_card_main);
 
         if (position > lastPosition) {

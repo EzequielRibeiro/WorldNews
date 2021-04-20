@@ -78,22 +78,6 @@ public class BootReceiver extends BroadcastReceiver {
         } else {
             Log.e("Alarm", "testando");
 
-            Article a = new Article();
-            a.setTitle("aaaaaaaaaaaaa");
-            Article b = new Article();
-            a.setTitle("bbbbbbbbbbbbb");
-            Article c = new Article();
-            a.setTitle("ccccccccccccccc");
-            Article d = new Article();
-            a.setTitle("dddddddddddddddd");
-            Article e = new Article();
-            a.setTitle("eeeeeeeeeeeeeee");
-            list.add(a);
-            list.add(b);
-            list.add(c);
-            list.add(d);
-            list.add(e);
-            notification(context);
             if (UtilityMethods.isNetworkAvailable())
                 new myTask().execute(url);
         }
@@ -101,7 +85,7 @@ public class BootReceiver extends BroadcastReceiver {
 
     private void notification(Context context) {
 
-        Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_launcher_round);
+        Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.mipmap.ic_launcher_round);
         Uri alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
         int importance = NotificationManager.IMPORTANCE_HIGH;
         NotificationChannel notificationChannel = null;
@@ -132,20 +116,22 @@ public class BootReceiver extends BroadcastReceiver {
         }
 
         android.app.Notification notification = new NotificationCompat.Builder(context, MainActivity.IDCHANNEL)
-                .setSmallIcon(R.drawable.ic_launcher_round)
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setAutoCancel(true)
                 .setSound(alarmSound)
-                .setContentTitle(context.getString(R.string.app_name))
-                .setSubText(context.getString(R.string.news_has_arrived_notification))
+                .setShowWhen(true)
+                .setContentTitle(context.getString(R.string.news_has_arrived_notification))
+                // .setSubText("")
+                // .setContentText("")
                 .setContentIntent(resultPendingIntent)
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setLargeIcon(bitmap)
-                .setStyle(new NotificationCompat.InboxStyle()
-                        .addLine(list.get(0).getTitle())
-                        .addLine(list.get(1).getTitle())
-                        .addLine(list.get(2).getTitle())
-                        .addLine(list.get(3).getTitle())
-                        .addLine(list.get(4).getTitle())).build();
+                .setStyle(new NotificationCompat.BigTextStyle()
+                        .bigText(list.get(0).getTitle() + "\n" +
+                                list.get(1).getTitle() + "\n" +
+                                list.get(2).getTitle() + "\n" +
+                                list.get(3).getTitle() + "\n" +
+                                list.get(4).getTitle())).build();
 
         notificationManager.notify(1518, notification);
     }
@@ -214,9 +200,12 @@ public class BootReceiver extends BroadcastReceiver {
                     for (int i = 0; i < 5; i++) {
                         dbAdapter.insertTitle(list.get(i).getTitle());
                     }
-                dbAdapter.close();
+
                 notification(context);
             }
+            list.clear();
+            dbAdapter.close();
+
         }
 
 
