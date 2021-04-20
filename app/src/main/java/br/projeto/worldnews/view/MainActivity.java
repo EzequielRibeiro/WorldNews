@@ -586,6 +586,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
                     if (translate.length() > 0)
                         dbAdapter.updateTopics(topicList.get(i).getId(), translate);
+                    else
+                        dbAdapter.updateTopics(topicList.get(i).getId(), topic);
                 }
             }
 
