@@ -3,6 +3,7 @@ package br.projeto.worldnews.view;
 import android.content.res.AssetManager;
 import android.graphics.Typeface;
 import android.os.Bundle;
+import android.text.Html;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -86,7 +87,7 @@ public class SearchActivity extends AppCompatActivity {
         mEdtSearch = findViewById(R.id.editText_search);
         mEdtSearch.setTypeface(montserrat_regular);
         DBAdapter dbAdapter = new DBAdapter(SearchActivity.this);
-        mEdtSearch.setHint(dbAdapter.getMensagemTranslated(10));
+        mEdtSearch.setHint(Html.fromHtml(dbAdapter.getMensagemTranslated(10)).toString());
         mSwipeRefreshSearch = findViewById(R.id.swipe_refresh_layout_search);
         mRecyclerViewSearch = findViewById(R.id.search_recycler_view);
         mTxvNoResultsFound = findViewById(R.id.tv_no_results);

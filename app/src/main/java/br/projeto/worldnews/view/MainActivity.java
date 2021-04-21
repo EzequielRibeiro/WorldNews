@@ -20,6 +20,7 @@ import android.os.Bundle;
 import android.os.Parcelable;
 import android.os.StrictMode;
 import android.os.SystemClock;
+import android.text.Html;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -77,7 +78,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     public static final String IDCHANNEL = "br.projeto.worldnews.ANDROID";
     private final static String[] MENSAGEM_ARRAY = {"Read the full article", "No results were found",
             "Finalizing adjustments to news topics", "Nothing to display today", "Do you want to exit ?",
-            "The world News in your hands", "You have new News", "No", "Yes", "Search", "About the app"};
+            "The world News in your hands", "You have new News", "No", "Yes", "Search", "About the app",
+            "An error has occurred", "Please turn on the Internet", "Share with", "Check out this article from the NewsApp app"};
     private final static String LOCALE_DEFAULT = "en";
     private String[] TOPIC_ARRAY = {"Google News", "Country", "World", "Businesses", "Finance", "Economy",
             "BitCoin", "Culture", "Gastronomy", "Travels", "Politics", "Science", "Health", "Sports", "Hacker",
@@ -113,7 +115,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             StringBuilder response = new StringBuilder();
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
             con.setRequestProperty("User-Agent", "Mozilla/5.0");
-            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+            con.setRequestProperty("Accept-Charset", "UTF-8");
+            con.setRequestProperty("Content-Type", "text/plain; charset=utf-8");
+            con.setRequestProperty("encoding", "UTF-8");
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream(), "UTF-8"));
             String inputLine;
             while ((inputLine = in.readLine()) != null) {
                 response.append(inputLine);
@@ -132,23 +138,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     }
 
-    private void createToolbar() {
-        toolbar = findViewById(R.id.toolbar_main_activity);
-        setSupportActionBar(toolbar);
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayShowTitleEnabled(false);
-        }
-        mTitle = findViewById(R.id.toolbar_title);
-        mTitle.setTypeface(montserrat_regular);
-    }
-
-    private void createRecyclerView() {
-        recyclerView = findViewById(R.id.card_recycler_view);
-        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
-        swipeRefreshLayout.setOnRefreshListener(this);
-        swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
-        recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -175,12 +164,12 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         TOPIC_ARRAY[1] = locale.getDisplayCountry();
         DBAdapter dbAdapter = new DBAdapter(MainActivity.this);
         //populates database with topics to menu
-        if (dbAdapter.getCountTopics() == 0) {
+        if (dbAdapter.getCountTopics() < TOPIC_ARRAY.length) {
             for (String t : TOPIC_ARRAY)
                 dbAdapter.insertTopics(t, t);
         }
 
-        if (dbAdapter.getCountMensagem() == 0) {
+        if (dbAdapter.getCountMensagem() < MENSAGEM_ARRAY.length) {
             for (String m : MENSAGEM_ARRAY)
                 dbAdapter.insertMensagem(m, m);
         }
@@ -203,12 +192,37 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             layoutLoading.setVisibility(View.GONE);
             createDrawer(savedInstanceState, toolbar, montserrat_regular);
         }
+
+        for (DBAdapter.Mensagem m : dbAdapter.getAllMensagem()) {
+            Log.i("Mensagem", m.getId() + " - " + m.getMensagem() + "::" + m.getTranslated());
+        }
+
+
         dbAdapter.close();
         createNotificationChannel();
         if (!checkAlarmExist())
             setAlarm();
 
     }
+
+    private void createToolbar() {
+        toolbar = findViewById(R.id.toolbar_main_activity);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+        }
+        mTitle = findViewById(R.id.toolbar_title);
+        mTitle.setTypeface(montserrat_regular);
+    }
+
+    private void createRecyclerView() {
+        recyclerView = findViewById(R.id.card_recycler_view);
+        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
+        swipeRefreshLayout.setOnRefreshListener(this);
+        swipeRefreshLayout.setColorSchemeResources(R.color.colorPrimary);
+        recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
+    }
+
 
     private void createDrawer(Bundle savedInstanceState, final Toolbar toolbar, Typeface montserrat_regular) {
 
@@ -217,65 +231,65 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         topicList = dbAdapter.getAllTopics();
         dbAdapter.close();
 
-        PrimaryDrawerItem item0 = new PrimaryDrawerItem().withIdentifier(0).withName(topicList.get(0).getTopicTranslate())
+        PrimaryDrawerItem item0 = new PrimaryDrawerItem().withIdentifier(0).withName(Html.fromHtml(topicList.get(0).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_googlenews).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item1 = new PrimaryDrawerItem().withIdentifier(1).withName(topicList.get(1).getTopicTranslate())
+        PrimaryDrawerItem item1 = new PrimaryDrawerItem().withIdentifier(1).withName(Html.fromHtml(topicList.get(1).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_country).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item2 = new PrimaryDrawerItem().withIdentifier(2).withName(topicList.get(2).getTopicTranslate())
+        PrimaryDrawerItem item2 = new PrimaryDrawerItem().withIdentifier(2).withName(Html.fromHtml(topicList.get(2).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item3 = new PrimaryDrawerItem().withIdentifier(3).withName(topicList.get(3).getTopicTranslate())
+        PrimaryDrawerItem item3 = new PrimaryDrawerItem().withIdentifier(3).withName(Html.fromHtml(topicList.get(3).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_business).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item4 = new PrimaryDrawerItem().withIdentifier(4).withName(topicList.get(4).getTopicTranslate())
+        PrimaryDrawerItem item4 = new PrimaryDrawerItem().withIdentifier(4).withName(Html.fromHtml(topicList.get(4).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_finance).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item5 = new PrimaryDrawerItem().withIdentifier(5).withName(topicList.get(5).getTopicTranslate())
+        PrimaryDrawerItem item5 = new PrimaryDrawerItem().withIdentifier(5).withName(Html.fromHtml(topicList.get(5).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_economy).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item6 = new PrimaryDrawerItem().withIdentifier(6).withName(topicList.get(6).getTopicTranslate())
+        PrimaryDrawerItem item6 = new PrimaryDrawerItem().withIdentifier(6).withName(Html.fromHtml(topicList.get(6).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_bitcoin).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item7 = new PrimaryDrawerItem().withIdentifier(7).withName(topicList.get(7).getTopicTranslate())
+        PrimaryDrawerItem item7 = new PrimaryDrawerItem().withIdentifier(7).withName(Html.fromHtml(topicList.get(7).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_culture).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item8 = new PrimaryDrawerItem().withIdentifier(8).withName(topicList.get(8).getTopicTranslate())
+        PrimaryDrawerItem item8 = new PrimaryDrawerItem().withIdentifier(8).withName(Html.fromHtml(topicList.get(8).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_gastronomy).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item9 = new PrimaryDrawerItem().withIdentifier(9).withName(topicList.get(9).getTopicTranslate())
+        PrimaryDrawerItem item9 = new PrimaryDrawerItem().withIdentifier(9).withName(Html.fromHtml(topicList.get(9).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_travels).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item10 = new PrimaryDrawerItem().withIdentifier(10).withName(topicList.get(10).getTopicTranslate())
+        PrimaryDrawerItem item10 = new PrimaryDrawerItem().withIdentifier(10).withName(Html.fromHtml(topicList.get(10).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_politic).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item11 = new PrimaryDrawerItem().withIdentifier(11).withName(topicList.get(11).getTopicTranslate())
+        PrimaryDrawerItem item11 = new PrimaryDrawerItem().withIdentifier(11).withName(Html.fromHtml(topicList.get(11).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_cience).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item12 = new PrimaryDrawerItem().withIdentifier(12).withName(topicList.get(12).getTopicTranslate())
+        PrimaryDrawerItem item12 = new PrimaryDrawerItem().withIdentifier(12).withName(Html.fromHtml(topicList.get(12).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_health).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item13 = new PrimaryDrawerItem().withIdentifier(13).withName(topicList.get(13).getTopicTranslate())
+        PrimaryDrawerItem item13 = new PrimaryDrawerItem().withIdentifier(13).withName(Html.fromHtml(topicList.get(13).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_sport).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item14 = new PrimaryDrawerItem().withIdentifier(14).withName(topicList.get(14).getTopicTranslate())
+        PrimaryDrawerItem item14 = new PrimaryDrawerItem().withIdentifier(14).withName(Html.fromHtml(topicList.get(14).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_hacker).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item15 = new PrimaryDrawerItem().withIdentifier(15).withName(topicList.get(15).getTopicTranslate())
+        PrimaryDrawerItem item15 = new PrimaryDrawerItem().withIdentifier(15).withName(Html.fromHtml(topicList.get(15).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_tecnology).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item16 = new PrimaryDrawerItem().withIdentifier(16).withName(topicList.get(16).getTopicTranslate())
+        PrimaryDrawerItem item16 = new PrimaryDrawerItem().withIdentifier(16).withName(Html.fromHtml(topicList.get(16).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_gamer).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item17 = new PrimaryDrawerItem().withIdentifier(17).withName(topicList.get(17).getTopicTranslate())
+        PrimaryDrawerItem item17 = new PrimaryDrawerItem().withIdentifier(17).withName(Html.fromHtml(topicList.get(17).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_entretenimento).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item18 = new PrimaryDrawerItem().withIdentifier(18).withName(topicList.get(18).getTopicTranslate())
+        PrimaryDrawerItem item18 = new PrimaryDrawerItem().withIdentifier(18).withName(Html.fromHtml(topicList.get(18).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_movie).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item19 = new PrimaryDrawerItem().withIdentifier(19).withName(topicList.get(19).getTopicTranslate())
+        PrimaryDrawerItem item19 = new PrimaryDrawerItem().withIdentifier(19).withName(Html.fromHtml(topicList.get(19).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_youtube).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item20 = new PrimaryDrawerItem().withIdentifier(20).withName(topicList.get(20).getTopicTranslate())
+        PrimaryDrawerItem item20 = new PrimaryDrawerItem().withIdentifier(20).withName(Html.fromHtml(topicList.get(20).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_twitch).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item21 = new PrimaryDrawerItem().withIdentifier(21).withName(topicList.get(21).getTopicTranslate())
+        PrimaryDrawerItem item21 = new PrimaryDrawerItem().withIdentifier(21).withName(Html.fromHtml(topicList.get(21).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_europe).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item22 = new PrimaryDrawerItem().withIdentifier(22).withName(topicList.get(22).getTopicTranslate())
+        PrimaryDrawerItem item22 = new PrimaryDrawerItem().withIdentifier(22).withName(Html.fromHtml(topicList.get(22).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item23 = new PrimaryDrawerItem().withIdentifier(23).withName(topicList.get(23).getTopicTranslate())
+        PrimaryDrawerItem item23 = new PrimaryDrawerItem().withIdentifier(23).withName(Html.fromHtml(topicList.get(23).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item24 = new PrimaryDrawerItem().withIdentifier(24).withName(topicList.get(24).getTopicTranslate())
+        PrimaryDrawerItem item24 = new PrimaryDrawerItem().withIdentifier(24).withName(Html.fromHtml(topicList.get(24).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item25 = new PrimaryDrawerItem().withIdentifier(25).withName(topicList.get(25).getTopicTranslate())
+        PrimaryDrawerItem item25 = new PrimaryDrawerItem().withIdentifier(25).withName(Html.fromHtml(topicList.get(25).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item26 = new PrimaryDrawerItem().withIdentifier(26).withName(topicList.get(26).getTopicTranslate())
+        PrimaryDrawerItem item26 = new PrimaryDrawerItem().withIdentifier(26).withName(Html.fromHtml(topicList.get(26).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item27 = new PrimaryDrawerItem().withIdentifier(27).withName(topicList.get(27).getTopicTranslate())
+        PrimaryDrawerItem item27 = new PrimaryDrawerItem().withIdentifier(27).withName(Html.fromHtml(topicList.get(27).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_like_us).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item28 = new PrimaryDrawerItem().withIdentifier(28).withName(topicList.get(28).getTopicTranslate())
+        PrimaryDrawerItem item28 = new PrimaryDrawerItem().withIdentifier(28).withName(Html.fromHtml(topicList.get(28).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_mail).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item29 = new PrimaryDrawerItem().withIdentifier(29).withName(topicList.get(29).getTopicTranslate())
+        PrimaryDrawerItem item29 = new PrimaryDrawerItem().withIdentifier(29).withName(Html.fromHtml(topicList.get(29).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_about).withTypeface(montserrat_regular);
 
         accountHeader = new AccountHeaderBuilder()
@@ -341,7 +355,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         if (googleXmlNews != null)
             if (googleXmlNews.getStatus() == AsyncTask.Status.RUNNING)
                 googleXmlNews.cancel(true);
-
+        Log.i("URL", url);
         googleXmlNews = new GoogleXmlNews(url, MainActivity.this, recyclerView, swipeRefreshLayout);
         googleXmlNews.execute();
         //https://news.google.com/news?cf=all&hl=lang&pz=1&ned=coun&q=bbc-news&output=rss
@@ -360,7 +374,9 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
      **/
     private void onLoadingSwipeRefreshLayout() {
         if (!UtilityMethods.isNetworkAvailable()) {
-            Toast.makeText(MainActivity.this, "Could not load latest News. Please turn on the Internet.", Toast.LENGTH_SHORT).show();
+            DBAdapter dbAdapter = new DBAdapter(MainActivity.this);
+            Toast.makeText(MainActivity.this, dbAdapter.getMensagemTranslated(13), Toast.LENGTH_SHORT).show();
+            dbAdapter.close();
         }
         swipeRefreshLayout.post(
                 new Runnable() {
@@ -425,7 +441,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.MyAlertDialogStyle);
             builder.setTitle(R.string.app_name);
             builder.setIcon(R.mipmap.ic_launcher_round);
-            builder.setMessage(dbAdapter.getMensagemTranslated(5))
+            builder.setMessage(Html.fromHtml(dbAdapter.getMensagemTranslated(5)).toString())
                     .setCancelable(false)
                     .setPositiveButton(dbAdapter.getMensagemTranslated(9), new DialogInterface.OnClickListener() {
                         @Override

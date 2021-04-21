@@ -6,6 +6,7 @@ import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.Html;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -62,7 +63,7 @@ public class ArticleActivity extends AppCompatActivity {
         linkToFullArticle.setTypeface(montserrat_regular);
 
         DBAdapter dbAdapter = new DBAdapter(ArticleActivity.this);
-        linkToFullArticle.setText(dbAdapter.getMensagemTranslated(1));
+        linkToFullArticle.setText(Html.fromHtml(dbAdapter.getMensagemTranslated(1)));
         dbAdapter.close();
 
         linkToFullArticle.setOnClickListener(new View.OnClickListener() {
@@ -120,10 +121,12 @@ public class ArticleActivity extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 Intent shareIntent = new Intent();
+                DBAdapter dbAdapter = new DBAdapter(ArticleActivity.this);
                 shareIntent.setAction(Intent.ACTION_SEND);
                 shareIntent.setType("text/plain");
-                shareIntent.putExtra(Intent.EXTRA_TEXT, "Check out this news! Send from MyTimes App\n" + Uri.parse(url));
-                startActivity(Intent.createChooser(shareIntent, "Share with"));
+                shareIntent.putExtra(Intent.EXTRA_TEXT, dbAdapter.getMensagemTranslated(15) + ":\n" + Uri.parse(url));
+                startActivity(Intent.createChooser(shareIntent, dbAdapter.getMensagemTranslated(14)));
+                dbAdapter.close();
             }
         });
     }

@@ -303,11 +303,13 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
         } catch (IOException ioException) {
             ioException.printStackTrace();
             exception = ioException;
-
+            DBAdapter dbAdapter = new DBAdapter(context);
             context.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    Toast.makeText(context, "an error has occurred", Toast.LENGTH_LONG).show();
+
+                    Toast.makeText(context, dbAdapter.getMensagemTranslated(12), Toast.LENGTH_LONG).show();
+                    dbAdapter.close();
                 }
             });
         }
