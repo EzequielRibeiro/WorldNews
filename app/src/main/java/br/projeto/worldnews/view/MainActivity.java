@@ -287,11 +287,11 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         PrimaryDrawerItem item26 = new PrimaryDrawerItem().withIdentifier(26).withName(Html.fromHtml(topicList.get(26).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
         PrimaryDrawerItem item27 = new PrimaryDrawerItem().withIdentifier(27).withName(Html.fromHtml(topicList.get(27).getTopicTranslate()).toString())
-                .withIcon(R.drawable.ic_like_us).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
         PrimaryDrawerItem item28 = new PrimaryDrawerItem().withIdentifier(28).withName(Html.fromHtml(topicList.get(28).getTopicTranslate()).toString())
-                .withIcon(R.drawable.ic_mail).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_like_us).withTypeface(montserrat_regular);
         PrimaryDrawerItem item29 = new PrimaryDrawerItem().withIdentifier(29).withName(Html.fromHtml(topicList.get(29).getTopicTranslate()).toString())
-                .withIcon(R.drawable.ic_about).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_mail).withTypeface(montserrat_regular);
         PrimaryDrawerItem item30 = new PrimaryDrawerItem().withIdentifier(30).withName(Html.fromHtml(topicList.get(30).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_about).withTypeface(montserrat_regular);
 
@@ -313,8 +313,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                         new DividerDrawerItem(), item10, item11, item12, item13,
                         new DividerDrawerItem(), item14, item15, item16,
                         new DividerDrawerItem(), item17, item18, item19, item20, item21,
-                        new DividerDrawerItem(), item22, item23, item24, item25, item26,
-                        new DividerDrawerItem(), item27, item28, item29, item30)
+                        new DividerDrawerItem(), item22, item23, item24, item25, item26, item27,
+                        new DividerDrawerItem(), item28, item29, item30)
                 .withOnDrawerItemClickListener(new OnDrawerItemClickListener() {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {

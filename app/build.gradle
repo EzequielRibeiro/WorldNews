@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         applicationId "br.projeto.worldnews"
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 30
         versionCode 11
         versionName "1.0"
@@ -70,7 +70,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-inappmessaging-display:19.1.5'
     implementation files('../in-app-purchasing-2.0.76.jar')
     implementation files('../amazon-ads-6.0.0.jar')
-
+    implementation 'com.github.MonsterTechnoGits:WebViewAdblock:1.1'
     //implementation 'com.amazon.android:mobile-ads:6.0.0'
     //noinspection GradleDynamicVersion
     testImplementation 'junit:junit:4.+'

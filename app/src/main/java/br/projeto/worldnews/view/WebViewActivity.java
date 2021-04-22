@@ -12,6 +12,7 @@ import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
@@ -35,6 +36,8 @@ import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
+import com.monstertechno.adblocker.AdBlockerWebView;
+import com.monstertechno.adblocker.util.AdBlocker;
 
 import br.projeto.worldnews.R;
 import br.projeto.worldnews.model.Constants;
@@ -71,6 +74,8 @@ public class WebViewActivity extends AppCompatActivity {
         createToolbar();
         adContainer = findViewById(R.id.containerAd);
         webView = findViewById(R.id.webView_article);
+        webView.getSettings().setBuiltInZoomControls(true);
+        new AdBlockerWebView.init(this).initializeWebView(webView);
         progressBar = findViewById(R.id.progressBar);
 
         if (savedInstanceState == null) {
@@ -223,12 +228,26 @@ public class WebViewActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         mTitle = findViewById(R.id.toolbar_title_web_view);
         mTitle.setTypeface(montserrat_regular);
-        mTitle.setText(url);
+        if (url.length() > "https//".length())
+            mTitle.setText(url);
+        else
+            mTitle.setText("");
     }
 
     private void initWebView() {
+
         webView.setWebChromeClient(new MyWebChromeClient(this));
         webView.setWebViewClient(new WebViewClient() {
+
+
+            @Override
+            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
+
+                return AdBlockerWebView.blockAds(view, url) ? AdBlocker.createEmptyResource() :
+                        super.shouldInterceptRequest(view, url);
+
+            }
+
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {
                 super.onPageStarted(view, url, favicon);
@@ -246,6 +265,7 @@ public class WebViewActivity extends AppCompatActivity {
             public void onPageFinished(WebView view, String url) {
                 super.onPageFinished(view, url);
                 progressBar.setVisibility(View.GONE);
+
             }
 
             @Override

@@ -20,7 +20,9 @@
         <item name="windowNoTitle">true</item>
     </style>
 
-    <style name="AppTheme.AppBarOverlay" parent="MaterialDrawerTheme.ActionBar.TranslucentStatus" />
+    <style name="AppTheme.AppBarOverlay" parent="MaterialDrawerTheme.ActionBar.TranslucentStatus">
+        <item name="colorControlNormal">@color/md_yellow_A200</item>
+    </style>
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
