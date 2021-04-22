@@ -89,15 +89,15 @@ public class ArticleActivity extends AppCompatActivity {
         url = getIntent().getStringExtra(Constants.INTENT_ARTICLE_URL);
 
         TextView content_Headline = findViewById(R.id.content_Headline);
-        content_Headline.setText(headLine);
+        content_Headline.setText(Html.fromHtml(headLine));
         content_Headline.setTypeface(montserrat_semiBold);
 
         TextView content_Description = findViewById(R.id.content_Description);
-        content_Description.setText(description);
+        content_Description.setText(Html.fromHtml(description));
         content_Description.setTypeface(montserrat_regular);
 
         TextView content_Date = findViewById(R.id.content_Date);
-        content_Date.setText(date);
+        content_Date.setText(Html.fromHtml(date));
         content_Date.setTypeface(montserrat_regular);
 
         loadTask = new LoadTask(content_Description);

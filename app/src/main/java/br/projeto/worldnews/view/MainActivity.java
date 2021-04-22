@@ -83,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private final static String LOCALE_DEFAULT = "en";
     private String[] TOPIC_ARRAY = {"Google News", "Country", "World", "Businesses", "Finance", "Economy",
             "BitCoin", "Culture", "Gastronomy", "Travels", "Politics", "Science", "Health", "Sports", "Hacker",
-            "Technology", "Videogame", "Entertainment", "Films", "Youtube", "Twitch", "Europe", "Asia", "Africa",
+            "Technology", "Videogame", "Entertainment", "Films", "Youtube", "Twitch", "Netflix", "Europe", "Asia", "Africa",
             "South America", "North America", "Middle East", "Rate us!", "Contact us", "About the app"};
     public static String url = "https://news.google.com/news?cf=all&hl=language&pz=1&ned=country&q=topic&sort=date&output=rss";
     private String SOURCE;
@@ -188,6 +188,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 new TranslateMensagem(MainActivity.this).execute();
 
         } else {
+            dbAdapter.deleteAllTitles();//delete the first 5 news read
             onLoadingSwipeRefreshLayout();
             layoutLoading.setVisibility(View.GONE);
             createDrawer(savedInstanceState, toolbar, montserrat_regular);
@@ -274,7 +275,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         PrimaryDrawerItem item20 = new PrimaryDrawerItem().withIdentifier(20).withName(Html.fromHtml(topicList.get(20).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_twitch).withTypeface(montserrat_regular);
         PrimaryDrawerItem item21 = new PrimaryDrawerItem().withIdentifier(21).withName(Html.fromHtml(topicList.get(21).getTopicTranslate()).toString())
-                .withIcon(R.drawable.ic_europe).withTypeface(montserrat_regular);
+                .withIcon(R.drawable.ic_netflix).withTypeface(montserrat_regular);
         PrimaryDrawerItem item22 = new PrimaryDrawerItem().withIdentifier(22).withName(Html.fromHtml(topicList.get(22).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
         PrimaryDrawerItem item23 = new PrimaryDrawerItem().withIdentifier(23).withName(Html.fromHtml(topicList.get(23).getTopicTranslate()).toString())
@@ -290,6 +291,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         PrimaryDrawerItem item28 = new PrimaryDrawerItem().withIdentifier(28).withName(Html.fromHtml(topicList.get(28).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_mail).withTypeface(montserrat_regular);
         PrimaryDrawerItem item29 = new PrimaryDrawerItem().withIdentifier(29).withName(Html.fromHtml(topicList.get(29).getTopicTranslate()).toString())
+                .withIcon(R.drawable.ic_about).withTypeface(montserrat_regular);
+        PrimaryDrawerItem item30 = new PrimaryDrawerItem().withIdentifier(30).withName(Html.fromHtml(topicList.get(30).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_about).withTypeface(montserrat_regular);
 
         accountHeader = new AccountHeaderBuilder()
@@ -309,22 +312,22 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                         new DividerDrawerItem(), item7, item8, item9,
                         new DividerDrawerItem(), item10, item11, item12, item13,
                         new DividerDrawerItem(), item14, item15, item16,
-                        new DividerDrawerItem(), item17, item18, item19, item20,
-                        new DividerDrawerItem(), item21, item22, item23, item24, item25, item26,
-                        new DividerDrawerItem(), item27, item28, item29)
+                        new DividerDrawerItem(), item17, item18, item19, item20, item21,
+                        new DividerDrawerItem(), item22, item23, item24, item25, item26,
+                        new DividerDrawerItem(), item27, item28, item29, item30)
                 .withOnDrawerItemClickListener(new OnDrawerItemClickListener() {
                     @Override
                     public boolean onItemClick(View view, int position, IDrawerItem drawerItem) {
 
                         switch ((int) drawerItem.getIdentifier()) {
 
-                            case 27:
+                            case 28:
                                 rateApp();
                                 break;
-                            case 28:
+                            case 29:
                                 sendEmail();
                                 break;
-                            case 29:
+                            case 30:
                                 openAboutActivity();
                                 break;
                             default:
@@ -607,7 +610,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 String topic = topicList.get(i).getTopic();
                 String translate = "";
                 if (!topicList.get(i).isTranslated() && (!topicList.get(i).getTopic().contains("Youtube")
-                        && !topicList.get(i).getTopic().contains("Twitch"))) {
+                        && !topicList.get(i).getTopic().contains("Twitch") && !topicList.get(i).getTopic().contains("Netflix"))) {
                     translate = translate(LOCALE_DEFAULT, locale.getLanguage(), topic);
 
                     int finalI = i;
