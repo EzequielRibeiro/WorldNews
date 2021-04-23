@@ -5,7 +5,7 @@
     <string name="iv_card_content_description_image">Image of the news response</string>
     <string name="collasping_image">Collasping Image</string>
     <string name="menu_title_about">About the app</string>
-    <string name="tv_made_with_love_by">Made by</string>
+    <string name="tv_made_by">Developer</string>
     <string name="iv_card_my_info">My Photo</string>
     <string name="tools_used">Tools Used</string>
     <string name="toolbar_default_text">News</string>

@@ -36,8 +36,8 @@
         android:gravity="center"
         android:text="No results were found"
         android:textAlignment="center"
-        android:textColor="@android:color/background_dark"
+        android:textColor="@android:color/darker_gray"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:visibility="gone" />
+        android:visibility="visible" />
 </FrameLayout>

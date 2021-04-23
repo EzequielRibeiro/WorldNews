@@ -25,8 +25,8 @@
             android:layout_marginLeft="8dp"
             android:layout_marginTop="16dp"
             android:layout_marginRight="8dp"
-            android:text="@string/tv_made_with_love_by"
-            android:textAllCaps="true"
+            android:text="@string/tv_made_by"
+            android:textAllCaps="false"
             android:textColor="@color/colorDarkBackground"
             android:textSize="14sp" />
 
@@ -40,7 +40,7 @@
             android:layout_marginTop="16dp"
             android:layout_marginRight="8dp"
             android:text="@string/tools_used"
-            android:textAllCaps="true"
+            android:textAllCaps="false"
             android:textColor="@color/colorDarkBackground"
             android:textSize="14sp" />
 
@@ -64,7 +64,8 @@
                     android:id="@+id/tv_author1"
                     style="@style/card_layout_library_author"
                     android:layout_below="@id/tv_info1"
-                    android:text="@string/android_studio_support" />
+                    android:text="@string/android_studio_support"
+                    android:textColor="@color/black" />
             </RelativeLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -88,7 +89,8 @@
                     android:id="@+id/tv_author2"
                     style="@style/card_layout_library_author"
                     android:layout_below="@id/tv_info2"
-                    android:text="@string/notepad_description" />
+                    android:text="@string/notepad_description"
+                    android:textColor="@color/black" />
             </RelativeLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -112,7 +114,8 @@
                     android:id="@+id/tv_author3"
                     style="@style/card_layout_library_author"
                     android:layout_below="@id/tv_info3"
-                    android:text="@string/stackoverflow_description" />
+                    android:text="@string/stackoverflow_description"
+                    android:textColor="@color/black" />
             </RelativeLayout>
         </com.google.android.material.card.MaterialCardView>
 
@@ -137,7 +140,8 @@
                     android:id="@+id/tv_author4"
                     style="@style/card_layout_library_author"
                     android:layout_below="@id/tv_info4"
-                    android:text="@string/coffee_description" />
+                    android:text="@string/coffee_description"
+                    android:textColor="@color/black" />
             </RelativeLayout>
         </com.google.android.material.card.MaterialCardView>
 

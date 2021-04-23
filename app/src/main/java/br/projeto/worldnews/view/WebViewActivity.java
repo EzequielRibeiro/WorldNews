@@ -89,7 +89,7 @@ public class WebViewActivity extends AppCompatActivity {
                     InitializationStatus initializationStatus) {
             }
         });
-        com.amazon.device.ads.AdRegistration.setAppKey(getString(R.string.amazon_ad_unit_id));
+        com.amazon.device.ads.AdRegistration.setAppKey(getSharedPreferences("amazon", MODE_PRIVATE).getString("key", "000"));
         // com.amazon.device.ads.AdRegistration.enableTesting(true);
         /*
         List<String> testDeviceIds = Arrays.asList("DB530A1BBBDBFE8567328113528A19EF", "49EB8CE6C2EA8D132E11FA3F75D28D0B");
