@@ -90,7 +90,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             "BitCoin", "Culture", "Gastronomy", "Travels", "Politics", "Science", "Health", "Sports", "Hacker",
             "Technology", "Videogame", "Entertainment", "Films", "Youtube", "Twitch", "Netflix", "Europe", "Asia", "Africa",
             "South America", "North America", "Middle East", "Rate us!", "Contact us", "About the app"};
-    public static String url = "https://news.google.com/news?cf=all&hl=language&pz=1&ned=country&q=topic&sort=date&output=rss";
+    public static final String URLNEWS = "https://news.google.com/news?cf=all&hl=language&pz=1&ned=country&q=topic&sort=date&output=rss";
+    private String url;
     private String SOURCE;
     private GoogleXmlNews googleXmlNews;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -103,7 +104,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private TextView mTitle;
     private Locale locale;
     private List<Topic> topicList;
-    private String countryCode;
+    private String countryCode, languageCode, countDisplayName;
     private ConstraintLayout layoutLoading;
     private FirebaseAnalytics mFirebaseAnalytics;
 
@@ -111,11 +112,15 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
         final String yourURL = "https://script.google.com/macros/s/AKfycbyHrs_kLCmXJB-fH_mS2ODtud3y0lR4Povq9nE2EqCSBPSiqjF80PNMKJohEV3TrZws/exec";
 
+        if (langFrom.equals(langTo)) {
+            return text;
+        }
+
         try {
 
             String urlStr = yourURL + "?q=" + URLEncoder.encode(text, "UTF-8") + "&target=" + langTo + "&source="
                     + langFrom;
-
+            Log.e("URL", urlStr);
             URL url = new URL(urlStr);
             StringBuilder response = new StringBuilder();
             HttpURLConnection con = (HttpURLConnection) url.openConnection();
@@ -160,37 +165,31 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                             Log.d("Remote Config", "Config params updated: " + updated);
 
                         } else {
-                            Log.e("Remote Config", "Fetch failed");
+                            Log.d("Remote Config", "Fetch failed");
                         }
                         getSharedPreferences("amazon", MODE_PRIVATE).edit().putString("key", mFirebaseRemoteConfig.getString("amazon_key")).apply();
+                        Log.d("Remote Config", mFirebaseRemoteConfig.getString("amazon_key"));
                     }
                 });
 
     }
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
-        layoutLoading = findViewById(R.id.layoutLoading);
+    private void translateApp() {
 
         locale = getResources().getConfiguration().locale;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             countryCode = getResources().getConfiguration().getLocales().get(0).getCountry();
+            languageCode = getResources().getConfiguration().getLocales().get(0).getLanguage();
+            countDisplayName = getResources().getConfiguration().getLocales().get(0).getDisplayCountry();
         } else {
             countryCode = getResources().getConfiguration().locale.getCountry();
+            languageCode = getResources().getConfiguration().locale.getLanguage();
+            countDisplayName = getResources().getConfiguration().locale.getDisplayCountry();
         }
-        url = url.replace("language", locale.getLanguage()).
+        url = URLNEWS.replace("language", languageCode).
                 replace("country", countryCode);
 
-        AssetManager assetManager = this.getApplicationContext().getAssets();
-        montserrat_regular = Typeface.createFromAsset(assetManager, "fonts/Montserrat-Regular.ttf");
-
-
-        TOPIC_ARRAY[1] = locale.getDisplayCountry();
+        TOPIC_ARRAY[1] = countDisplayName;
         DBAdapter dbAdapter = new DBAdapter(MainActivity.this);
         //populates database with topics to menu
         if (dbAdapter.getCountTopics() < TOPIC_ARRAY.length) {
@@ -206,21 +205,29 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         createToolbar();
         createRecyclerView();
         SOURCE = TOPIC_ARRAY[0];
-        mTitle.setText(getString(R.string.toolbar_default_text) + " " + locale.getDisplayCountry());
-        getSharedPreferences("topics", MODE_PRIVATE).edit().putString("topic", getString(R.string.toolbar_default_text) + " " + locale.getDisplayCountry()).apply();
+        mTitle.setText(getString(R.string.toolbar_default_text) + " " + countDisplayName);
 
+        getSharedPreferences("topics", MODE_PRIVATE).edit().putString("topic", getString(R.string.toolbar_default_text) + " " + countDisplayName).apply();
+
+        String savedLaguage = getSharedPreferences(
+                "language", MODE_PRIVATE).getString("lang", LOCALE_DEFAULT);
         //translate topics to current language
-        if (!locale.getLanguage().equals(LOCALE_DEFAULT)) {
+
+        if (!languageCode.equals(new Locale(savedLaguage).getLanguage())) {
+
+            dbAdapter.updateTopicsToFalseTranslate();
+            dbAdapter.updateMensagemToFalseTranslate();
+
             if (!(dbAdapter.getCountTopicsTranslated() == TOPIC_ARRAY.length))
                 new TranslateTopics(MainActivity.this).execute();
             if (!(dbAdapter.getCountMensagemTranslated() == MENSAGEM_ARRAY.length))
                 new TranslateMensagem(MainActivity.this).execute();
 
         } else {
-            dbAdapter.deleteAllTitles();//delete the first 5 news read
+
             onLoadingSwipeRefreshLayout();
             layoutLoading.setVisibility(View.GONE);
-            createDrawer(savedInstanceState, toolbar, montserrat_regular);
+            createDrawer(getIntent().getExtras(), toolbar, montserrat_regular);
         }
 
         for (DBAdapter.Mensagem m : dbAdapter.getAllMensagem()) {
@@ -229,10 +236,29 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
 
         dbAdapter.close();
+
+
+    }
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        layoutLoading = findViewById(R.id.layoutLoading);
+
+
+        AssetManager assetManager = this.getApplicationContext().getAssets();
+        montserrat_regular = Typeface.createFromAsset(assetManager, "fonts/Montserrat-Regular.ttf");
+
         createNotificationChannel();
         initRemoteConfig();
         if (!checkAlarmExist())
             setAlarm();
+
+        translateApp();
 
     }
 
@@ -257,14 +283,14 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void createDrawer(Bundle savedInstanceState, final Toolbar toolbar, Typeface montserrat_regular) {
 
-
         DBAdapter dbAdapter = new DBAdapter(MainActivity.this);
         topicList = dbAdapter.getAllTopics();
+        topicList.get(1).setTopicTranslate(countDisplayName);
         dbAdapter.close();
 
         PrimaryDrawerItem item0 = new PrimaryDrawerItem().withIdentifier(0).withName(Html.fromHtml(topicList.get(0).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_googlenews).withTypeface(montserrat_regular);
-        PrimaryDrawerItem item1 = new PrimaryDrawerItem().withIdentifier(1).withName(Html.fromHtml(topicList.get(1).getTopicTranslate()).toString())
+        PrimaryDrawerItem item1 = new PrimaryDrawerItem().withIdentifier(1).withName(topicList.get(1).getTopicTranslate())
                 .withIcon(R.drawable.ic_country).withTypeface(montserrat_regular);
         PrimaryDrawerItem item2 = new PrimaryDrawerItem().withIdentifier(2).withName(Html.fromHtml(topicList.get(2).getTopicTranslate()).toString())
                 .withIcon(R.drawable.ic_world).withTypeface(montserrat_regular);
@@ -377,12 +403,15 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void loadJSON() {
 
+        DBAdapter dbAdapter = new DBAdapter(MainActivity.this);
+        dbAdapter.deleteAllTitles();
+
         swipeRefreshLayout.setRefreshing(true);
         //"https://news.google.com/news?cf=all&hl=language&pz=1&ned=country&q=topic&output=rss";
         String url = this.url.replace("topic", SOURCE);
 
         if (SOURCE.equals("Google News"))
-            url = "https://news.google.com/rss?hl=" + locale.getLanguage() + "&sort=date&gl=" + countryCode;
+            url = "https://news.google.com/rss?hl=" + languageCode + "&sort=date&gl=" + countryCode;
 
 
         if (googleXmlNews != null)
@@ -591,11 +620,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     @Override
     protected void onResume() {
         super.onResume();
+        translateApp();
         if (listState != null) {
             recyclerView.getLayoutManager().onRestoreInstanceState(listState);
         }
-
-
     }
 
     @Override
@@ -641,7 +669,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 String translate = "";
                 if (!topicList.get(i).isTranslated() && (!topicList.get(i).getTopic().contains("Youtube")
                         && !topicList.get(i).getTopic().contains("Twitch") && !topicList.get(i).getTopic().contains("Netflix"))) {
-                    translate = translate(LOCALE_DEFAULT, locale.getLanguage(), topic);
+                    translate = translate(LOCALE_DEFAULT, languageCode, topic);
 
                     int finalI = i;
                     activity.runOnUiThread(new Runnable() {
@@ -665,6 +693,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         @Override
         protected void onPostExecute(Object o) {
             super.onPostExecute(o);
+            activity.getSharedPreferences(
+                    "language", MODE_PRIVATE).edit().putString("lang", languageCode).apply();
             onLoadingSwipeRefreshLayout();
             appBarLayout.setVisibility(View.VISIBLE);
             layoutLoading.setVisibility(View.GONE);
@@ -690,7 +720,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 String mensagem = mensagemList.get(i).getMensagem();
                 String translate = "";
                 if (!mensagemList.get(i).getIsTranlated()) {
-                    translate = translate(LOCALE_DEFAULT, locale.getLanguage(), mensagem);
+                    translate = translate(LOCALE_DEFAULT, languageCode, mensagem);
 
                     if (translate.length() > 0)
                         dbAdapter.updateMensagem(mensagemList.get(i).getId(), translate);

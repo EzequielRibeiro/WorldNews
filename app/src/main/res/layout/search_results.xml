@@ -39,5 +39,5 @@
         android:textColor="@android:color/darker_gray"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:visibility="visible" />
+        android:visibility="gone" />
 </FrameLayout>

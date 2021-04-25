@@ -13,6 +13,7 @@ import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.LinearLayout;
@@ -43,6 +44,7 @@ import br.projeto.worldnews.R;
 import br.projeto.worldnews.model.Constants;
 
 
+
 public class WebViewActivity extends AppCompatActivity {
 
     private WebView webView;
@@ -65,7 +67,6 @@ public class WebViewActivity extends AppCompatActivity {
 
         AssetManager assetManager = this.getApplicationContext().getAssets();
         montserrat_regular = Typeface.createFromAsset(assetManager, "fonts/Montserrat-Regular.ttf");
-
         url = getIntent().getStringExtra(Constants.INTENT_URL);
 
         /*
@@ -74,8 +75,9 @@ public class WebViewActivity extends AppCompatActivity {
         createToolbar();
         adContainer = findViewById(R.id.containerAd);
         webView = findViewById(R.id.webView_article);
-        webView.getSettings().setBuiltInZoomControls(true);
-        new AdBlockerWebView.init(this).initializeWebView(webView);
+
+        new AdBlockerWebView.init(WebViewActivity.this).initializeWebView(webView);
+
         progressBar = findViewById(R.id.progressBar);
 
         if (savedInstanceState == null) {
@@ -89,7 +91,7 @@ public class WebViewActivity extends AppCompatActivity {
                     InitializationStatus initializationStatus) {
             }
         });
-        com.amazon.device.ads.AdRegistration.setAppKey(getSharedPreferences("amazon", MODE_PRIVATE).getString("key", "000"));
+        com.amazon.device.ads.AdRegistration.setAppKey(getSharedPreferences("amazon", MODE_PRIVATE).getString("key", "1111"));
         // com.amazon.device.ads.AdRegistration.enableTesting(true);
         /*
         List<String> testDeviceIds = Arrays.asList("DB530A1BBBDBFE8567328113528A19EF", "49EB8CE6C2EA8D132E11FA3F75D28D0B");
@@ -239,13 +241,10 @@ public class WebViewActivity extends AppCompatActivity {
         webView.setWebChromeClient(new MyWebChromeClient(this));
         webView.setWebViewClient(new WebViewClient() {
 
-
             @Override
-            public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
-
+            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
                 return AdBlockerWebView.blockAds(view, url) ? AdBlocker.createEmptyResource() :
-                        super.shouldInterceptRequest(view, url);
-
+                        super.shouldInterceptRequest(view, request);
             }
 
             @Override
@@ -278,6 +277,17 @@ public class WebViewActivity extends AppCompatActivity {
         webView.clearHistory();
         webView.getSettings().setJavaScriptEnabled(true);
         webView.setHorizontalScrollBarEnabled(false);
+        webView.getSettings().setRenderPriority(WebSettings.RenderPriority.HIGH);
+        webView.getSettings().setAppCacheEnabled(true);
+        webView.setScrollBarStyle(View.SCROLLBARS_INSIDE_OVERLAY);
+        webView.getSettings().setDomStorageEnabled(true);
+        webView.getSettings().setLayoutAlgorithm(WebSettings.LayoutAlgorithm.TEXT_AUTOSIZING);
+        webView.getSettings().setUseWideViewPort(true);
+        webView.getSettings().setSavePassword(true);
+        webView.getSettings().setSaveFormData(true);
+        webView.getSettings().setEnableSmoothTransition(true);
+        webView.getSettings().setBuiltInZoomControls(true);
+        webView.getSettings().setSupportZoom(true);
 
         webView.setOnTouchListener(new View.OnTouchListener() {
             @Override

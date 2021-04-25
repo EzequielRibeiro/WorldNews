@@ -99,7 +99,7 @@ public class SearchActivity extends AppCompatActivity {
     private void searchEverything(final String search) {
         mSwipeRefreshSearch.setEnabled(true);
         mSwipeRefreshSearch.setRefreshing(true);
-        String url = MainActivity.url.replace("topic", search);
+        String url = MainActivity.URLNEWS.replace("topic", search);
 
         Log.e("URL", url);
         googleXmlNews = new GoogleXmlNews(url, SearchActivity.this, mRecyclerViewSearch, mSwipeRefreshSearch);

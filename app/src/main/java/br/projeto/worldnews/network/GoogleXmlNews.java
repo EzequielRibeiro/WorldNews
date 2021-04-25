@@ -170,9 +170,11 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
         if (exception != null) {
 
             context.runOnUiThread(new Runnable() {
+                DBAdapter dbAdapter = new DBAdapter(context);
                 @Override
                 public void run() {
-                    Toast.makeText(context, "an error has occurred", Toast.LENGTH_LONG).show();
+                    Toast.makeText(context, dbAdapter.getMensagemTranslated(12), Toast.LENGTH_LONG).show();
+                    dbAdapter.close();
                 }
             });
 
@@ -319,8 +321,6 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
     protected void onPostExecute(String result) {
         super.onPostExecute(result);
 
-
-
         context.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -336,7 +336,8 @@ public class GoogleXmlNews extends AsyncTask<String, Void, String> {
                         recyclerView.setVisibility(View.GONE);
                     }
                     DBAdapter dbAdapter = new DBAdapter(context);
-                    Toast.makeText(context, dbAdapter.getMensagemTranslated(4), Toast.LENGTH_LONG).show();
+                    if (context instanceof MainActivity)
+                        Toast.makeText(context, dbAdapter.getMensagemTranslated(4), Toast.LENGTH_LONG).show();
                     dbAdapter.close();
 
                 } else {

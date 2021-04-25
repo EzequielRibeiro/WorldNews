@@ -155,8 +155,8 @@ public class DataAdapterArticle extends RecyclerView.Adapter<DataAdapterArticle.
             try {
                 urlImage[0] = ImageExtractor.extractImageUrl(urlImage[0]);
                 articles.get(position).setUrlToImage(urlImage[0]);
-            } catch (IOException ioException) {
-                ioException.printStackTrace();
+            } catch (IOException | IllegalStateException i) {
+                i.printStackTrace();
             }
             return urlImage;
         }

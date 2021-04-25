@@ -276,6 +276,22 @@ public class DBAdapter {
 
     }
 
+    public boolean updateTopicsToFalseTranslate() throws SQLException {
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(KEY_TRANSLATED, 0);
+        return db.update(DATABASE_TABLENAME_TOPIC, contentValues, null, null) > 0;
+
+    }
+
+    public boolean updateMensagemToFalseTranslate() throws SQLException {
+
+        ContentValues contentValues = new ContentValues();
+        contentValues.put(KEY_TRANSLATED, 0);
+        return db.update(DATABASE_TABLENAME_MENSAGEM, contentValues, null, null) > 0;
+
+    }
+
     public boolean updateTopics(int id, String translate) throws SQLException {
 
         ContentValues contentValues = new ContentValues();
