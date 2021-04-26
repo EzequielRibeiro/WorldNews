@@ -104,9 +104,46 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     private TextView mTitle;
     private Locale locale;
     private List<Topic> topicList;
-    private String countryCode, languageCode, countDisplayName;
+    private String countryCode = "US", languageCode = "en", countDisplayName = "United States";
     private ConstraintLayout layoutLoading;
     private FirebaseAnalytics mFirebaseAnalytics;
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        layoutLoading = findViewById(R.id.layoutLoading);
+        AssetManager assetManager = this.getApplicationContext().getAssets();
+        montserrat_regular = Typeface.createFromAsset(assetManager, "fonts/Montserrat-Regular.ttf");
+
+        DBAdapter dbAdapter = new DBAdapter(MainActivity.this);
+        //populates database with topics to menu
+        if (dbAdapter.getCountTopics() < TOPIC_ARRAY.length) {
+            for (String t : TOPIC_ARRAY)
+                dbAdapter.insertTopics(t, t);
+        }
+
+        if (dbAdapter.getCountMensagem() < MENSAGEM_ARRAY.length) {
+            for (String m : MENSAGEM_ARRAY)
+                dbAdapter.insertMensagem(m, m);
+        }
+        dbAdapter.deleteAllTitles();
+        dbAdapter.close();
+
+        //translate topics
+        translateApp();
+
+        createNotificationChannel();
+        initRemoteConfig();
+
+        if (!checkAlarmExist())
+            setAlarm();
+
+    }
 
     private static String translate(String langFrom, String langTo, String text) {
 
@@ -176,6 +213,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
     private void translateApp() {
 
+        DBAdapter dbAdapter = new DBAdapter(MainActivity.this);
+
         locale = getResources().getConfiguration().locale;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             countryCode = getResources().getConfiguration().getLocales().get(0).getCountry();
@@ -190,21 +229,10 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
                 replace("country", countryCode);
 
         TOPIC_ARRAY[1] = countDisplayName;
-        DBAdapter dbAdapter = new DBAdapter(MainActivity.this);
-        //populates database with topics to menu
-        if (dbAdapter.getCountTopics() < TOPIC_ARRAY.length) {
-            for (String t : TOPIC_ARRAY)
-                dbAdapter.insertTopics(t, t);
-        }
-
-        if (dbAdapter.getCountMensagem() < MENSAGEM_ARRAY.length) {
-            for (String m : MENSAGEM_ARRAY)
-                dbAdapter.insertMensagem(m, m);
-        }
-
+        SOURCE = TOPIC_ARRAY[0];
         createToolbar();
         createRecyclerView();
-        SOURCE = TOPIC_ARRAY[0];
+
         mTitle.setText(getString(R.string.toolbar_default_text) + " " + countDisplayName);
 
         getSharedPreferences("topics", MODE_PRIVATE).edit().putString("topic", getString(R.string.toolbar_default_text) + " " + countDisplayName).apply();
@@ -230,35 +258,8 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             createDrawer(getIntent().getExtras(), toolbar, montserrat_regular);
         }
 
-        for (DBAdapter.Mensagem m : dbAdapter.getAllMensagem()) {
-            Log.i("Mensagem", m.getId() + " - " + m.getMensagem() + "::" + m.getTranslated());
-        }
-
-
         dbAdapter.close();
 
-
-    }
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
-        layoutLoading = findViewById(R.id.layoutLoading);
-
-
-        AssetManager assetManager = this.getApplicationContext().getAssets();
-        montserrat_regular = Typeface.createFromAsset(assetManager, "fonts/Montserrat-Regular.ttf");
-
-        createNotificationChannel();
-        initRemoteConfig();
-        if (!checkAlarmExist())
-            setAlarm();
-
-        translateApp();
 
     }
 
@@ -402,9 +403,6 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     }
 
     private void loadJSON() {
-
-        DBAdapter dbAdapter = new DBAdapter(MainActivity.this);
-        dbAdapter.deleteAllTitles();
 
         swipeRefreshLayout.setRefreshing(true);
         //"https://news.google.com/news?cf=all&hl=language&pz=1&ned=country&q=topic&output=rss";
@@ -620,7 +618,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     @Override
     protected void onResume() {
         super.onResume();
-        translateApp();
+
         if (listState != null) {
             recyclerView.getLayoutManager().onRestoreInstanceState(listState);
         }
@@ -656,13 +654,21 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             activity = (Activity) context;
             appBarLayout = findViewById(R.id.appBarLayout);
             appBarLayout.setVisibility(View.GONE);
-            TextView textView = findViewById(R.id.textViewAdjustments);
-            textView.setText(dbAdapter.getMensagemTranslated(3));
+
         }
 
         @Override
         protected Object doInBackground(Object[] objects) {
             TextView textView = findViewById(R.id.textViewAdjustmentsProgress);
+            TextView textViewAdjustments = findViewById(R.id.textViewAdjustments);
+            activity.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    textViewAdjustments.setText(translate(LOCALE_DEFAULT, languageCode, "Setting the application to your language."));
+                }
+            });
+
+
             List<Topic> topicList = dbAdapter.getAllTopics();
             for (int i = 2; i < topicList.size(); i++) {
                 String topic = topicList.get(i).getTopic();

@@ -12,7 +12,6 @@ import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -37,8 +36,6 @@ import com.google.android.gms.ads.initialization.InitializationStatus;
 import com.google.android.gms.ads.initialization.OnInitializationCompleteListener;
 import com.google.android.gms.ads.interstitial.InterstitialAd;
 import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback;
-import com.monstertechno.adblocker.AdBlockerWebView;
-import com.monstertechno.adblocker.util.AdBlocker;
 
 import br.projeto.worldnews.R;
 import br.projeto.worldnews.model.Constants;
@@ -75,8 +72,6 @@ public class WebViewActivity extends AppCompatActivity {
         createToolbar();
         adContainer = findViewById(R.id.containerAd);
         webView = findViewById(R.id.webView_article);
-
-        new AdBlockerWebView.init(WebViewActivity.this).initializeWebView(webView);
 
         progressBar = findViewById(R.id.progressBar);
 
@@ -240,12 +235,6 @@ public class WebViewActivity extends AppCompatActivity {
 
         webView.setWebChromeClient(new MyWebChromeClient(this));
         webView.setWebViewClient(new WebViewClient() {
-
-            @Override
-            public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest request) {
-                return AdBlockerWebView.blockAds(view, url) ? AdBlocker.createEmptyResource() :
-                        super.shouldInterceptRequest(view, request);
-            }
 
             @Override
             public void onPageStarted(WebView view, String url, Bitmap favicon) {

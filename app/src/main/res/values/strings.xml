@@ -14,11 +14,11 @@
     <string name="mytimes_logo">Logo</string>
     <string name="info_tag">This app is using engine search Google</string>
     <string name="android_studio">Android Studio</string>
-    <string name="android_studio_support">Java, Kotlin e C++</string>
+    <string name="android_studio_support">developer.android.com/studio</string>
     <string name="notepad">NotePad++</string>
-    <string name="notepad_description">Awesome text Editor</string>
-    <string name="stackoverflow">Stackoverflow</string>
-    <string name="stackoverflow_description">Who never ?</string>
+    <string name="notepad_description">notepad-plus-plus.org</string>
+    <string name="stackoverflow">Material Designer</string>
+    <string name="stackoverflow_description">material.io</string>
     <string name="coffee">Coffee</string>
     <string name="coffee_description">1.5L</string>
 
